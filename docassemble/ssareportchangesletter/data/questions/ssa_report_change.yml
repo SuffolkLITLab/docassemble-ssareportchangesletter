@@ -5,18 +5,35 @@ metadata:
   short title: |
     SSA Report Changes
   description: |
-    If you get SSI or SSDI, you need to tell Social Security about changes in your life. 
+    If you get SSI or SSDI (or both), you are required to tell Social Security about changes in your life by the 10th day of the month after the change happened. Failure to do so could result in an overpayment. If this change occurred in the past, you may wish to speak with a legal representative. 
+
     This tool helps you write a letter to Social Security to report changes, including:
 
-    * Moving
-    * Starting to live by yourself or with someone else
-    * Being in jail
-    * Being in the hospital
-    * Being in a nursing home
-    * Being outside the United States for more than 30 days
-    * Getting help to pay for rent or food
-    * Getting money from a lawsuit or lottery
-    * Getting married or divorced
+    * Update to personal information including phone number, address 
+    * Change in living arrangements:  
+         * A change in the number of persons in your household, for instance if you move in 
+           with someone, start living by yourself, or other persons move in or out of the   
+           household. 
+         * Death or spouse or anyone in your household.  
+         * Admission or discharge from an instution such as a jail, prison, detention center,             halfway house, hospital, nursing home, boot camp. 
+         * Leaving the United States for more than 30 days in a row
+         * Receipt of arrrest warrant. 
+    * Changes to your employment status, if you start or stop work, or if there is a change in       pay or hours worked
+    * Changes to your resources 
+         * bank account or account balance
+         * Changes to the value of things you own
+         * Getting help to pay for rent or food
+         * Getting money, for example from from a lawsuit or the lottery
+         * Eligibility for other benefits or payments
+    * Change in marital status, including any same-sex relationships
+    * School attendence if under age 22
+    * Change in citizenship or lawful noncitizen status 
+    
+    If you are a person with a disability, you must also report 
+    * Improvement in medical condition
+    * Any change in your Ticket to Work status 
+    * Any change in your work or Plan to Achieve Self-Support (PASS) expenses
+    
   can_I_use_this_form: |
     You can use this form if you are on SSI or SSDI and need to report changes to Social Security.
   before_you_start: |
@@ -39,7 +56,7 @@ metadata:
       organization: Volunteer Lawyer's Project of the Boston Bar Association
   revision_date: 2021-12-18
   update_notes: |
-    2024 - added metadata
+    2024 - updated metadata
 ---
 modules:
   - docassemble.base.util
@@ -95,22 +112,23 @@ code: |
   set_changes
   if working or working_for_self:
     jobs.gather()
+  
   # changes
   other_changes
+  
   if not working and not working_for_self and (changes.true_values().number() < 1) and not other_changes:
     wrong_interview
   else:
     if benefits_type == 'ssi':
       #if changes.true_values().number() > 0:
-      if changes['I moved']:
-        #saw_change_choices     
+      if changes['I moved']:   
         yes_moved
-      if changes['I was in jail']: 
+      if changes['I was in jail or prison']: 
         yes_jail
         jail_range
       if changes['I was in the hospital']:  
         yes_hospital
-        hopsital_range
+        hospital_range
       if changes['I was in a nursing home']: 
         yes_nursing
         nursing_range
@@ -119,10 +137,8 @@ code: |
         expat_range
       if changes['I received assistance to pay for rent or food']:
         change_details['I received assistance to pay for rent or food'].date
-        
       if changes['I received money from a lawsuit or lottery winnings']: 
         change_details['I received money from a lawsuit or lottery winnings'].date 
-        
       if not set(changes.true_values()).isdisjoint({
         'I got divorced',
         'I got married',
@@ -136,7 +152,6 @@ code: |
         'I started living with someone else',
         }):
             change_details[change].date
-        
       if changes['My immigration status changed']: 
         change_details['My immigration status changed'].date 
         
@@ -200,23 +215,43 @@ question: |
   We're here to help.
 subquestion: |
   This is a tool for people on SSI or SSDI disability benefits. It will help you write
-  a letter to the Social Security Administration (Social Security) to tell them about 
+  a letter to the Social Security Administration (Social Security) or document  
   [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) 
-  in your life they need to know about.
+  in your life they need to know about. 
+  You may report some changes directly the SSA by visiting:  
+  https://www.ssa.gov/?utm_source=ssmatters&utm_medium=blog-header&utm_campaign=blog-to-ssa-homepage
+
+  If you get SSI or SSDI (or both), you are required to tell Social Security about changes in 
+  your life by the 10th day of the month after the change happened. Failure to do so could 
+  result in an overpayment. If this change occurred in the past, you may wish to speak with a 
+  legal representative. 
+  
+  Updates may include updates to personal information, changes in living arrangements, 
+  changes in employment, changes to resources, changes in marital status, living outside the 
+  United States for more than 30 days in a row, changes in citizenship or lawful noncitizen 
+  status. 
+
+  If you are a person with a disability, you may need to also report improvements in your 
+  medical condition, any changes in your 'Ticket to Work' status, or any changes in your work 
+  or PASS expenses. 
 
   Before you start, you need to know if you are on
   
   * SSI (Supplemental Security Income), 
   * SSDI (Social Security Disability) or
   * SSI and SSDI.
+
+    For how to determine if you are on SSI, SSDI or both click [here](https://www.usa.gov/social-security-disability)
   
   If you are working and getting paid, you also need:
   the name and address of the place you work, 
   the number of hours you work, and
   how much you are paid.
+  
   Your pay stubs should have all this information on them, so having them with you 
   from the start will be helpful.
-  If you are answering questions  for someone else, you need their:
+  
+  If you are answering questions for someone else, you need their:
   full name, 
   address, and 
   Social Security number.
@@ -318,9 +353,15 @@ terms:
       The Social Security Administration needs this number in order to 
       apply the new information to your account.
 ---
+features:
+  question help button: False
+  
+---
 id: benefits type
 question: |
   What kind of Social Security benefits are you receiving?
+help: | 
+  If you are unsure whether you receive SSI, SSDI, or both you can call Social Security at 1-855-807-8807 or check the [Social Security website](https://www.ssa.gov/myaccount/)
 fields: 
   - no label: benefits_type_checkboxes
     datatype: checkboxes
@@ -341,30 +382,35 @@ question: |
   What kind of change do you have to report?
 subquestion: |
   Select anything that has changed.
-  Include work for Uber, Lyft, or work for yourself such as odd jobs.
+  Include work for Uber, Lyft, or work for yourself such as odd jobs, any sources of   
+  additional money, or a change in living situation. 
 fields:
   - I started working for an employer: working
     datatype: yesnowide
   - I started working for myself: working_for_self
     datatype: yesnowide
   - no label: changes
-    show if:
-      code: |
-        benefits_type == 'ssi'
     datatype: checkboxes
     choices:
       - I moved
-      - I was in jail
+      - I was in jail or prison
+      - I received an arrest warrant
       - I was in the hospital
       - I was in a nursing home
       - I was outside of the United States for more than 30 days in a row
+      - I had a change in resources 
+      - My bank account or account balance changed
       - I received assistance to pay for rent or food
       - I received money from a lawsuit or lottery winnings
       - My immigration status changed
       - I got divorced
       - I got married
-      - I started living by myself
-      - I started living with someone else
+      - There was a death in the household
+      - I was in school and I am under age 22
+      - I have a medical condition that improved 
+      - I had a change in my Ticket To Work status
+      - I had a change in my work or my PASS expenses 
+
     none of the above: False
   - Something else: has_something_else
     datatype: yesnowide
@@ -398,7 +444,7 @@ fields:
     choices:
       - Myself: self
       - Someone else: employer
-  - Employer's name: jobs[i].employer
+  - Employer's: jobs[i].employer
     show if: 
       variable: jobs[i].employer_type
       is: "employer"
@@ -462,7 +508,7 @@ fields:
 id: jail date 
 continue button field: yes_jail
 question: | 
-  What was the date that you were in jail? 
+  What was the date that you were in jail or prison? 
 fields:
   - Date entered : jail_start
     datatype: date
@@ -478,7 +524,7 @@ fields:
 ---
 code: |
   jail_range = True
-  change_details['I was in jail'].date = jail_start + ' ' + 'to' + ' ' + jail_end
+  change_details['I was in jail or prison'].date = jail_start + ' ' + 'to' + ' ' + jail_end
 ---
 id: hospital 
 continue button field: yes_hospital
@@ -491,7 +537,7 @@ fields:
     datatype: date
 ---
 code: |
-  hopsital_range = True
+  hospital_range = True
   change_details['I was in the hospital'].date = hospital_start + ' ' + 'to' + ' ' + hospital_end
 ---
 id: nursing home 
