@@ -34,12 +34,19 @@ metadata:
     * Any change in your Ticket to Work status 
     * Any change in your work or Plan to Achieve Self-Support (PASS) expenses
     
+
+
+    Report these changes promptly and no later than the tenth day of the month after they happen to       get an accurate payment of benefits.
+main
   can_I_use_this_form: |
     You can use this form if you are on SSI or SSDI and need to report changes to Social Security.
   before_you_start: |
-    Before you start, you need to know if you are on SSI (Supplemental Security Income), SSDI (Social Security Disability), or both. If you are working and getting paid, you also need the name and address of the place you work, the number of hours you work, and how much you are paid. Your pay stubs should have all this information on them, so having them with you from the start will be helpful. If you are answering questions for someone else, you need their full name, address, and Social Security number.
+    Before you start, you need to know: 
+    1. Are you on SSI (Supplemental Security Income), SSDI (Social Security Disability), or both?
+    2. If you are working and getting paid, you need the name and address of the place you work, the      number of hours you work, and how much you are paid. Your pay stubs should have all this              information on them, so having them with you from the start will be helpful. 
+    3. If you are answering questions for someone else, you need their full name, address, and Social     Security number.
 
-    Make sure you have specific information, like dates and addresses, before you start. This will help you complete the form more quickly.
+    Make sure you have specific information, like dates and addresses, before you start. This will        help you complete the form more quickly.
   maturity: production
   estimated_completion_minutes: 15
   estimated_completion_delta: 15
@@ -214,6 +221,7 @@ field: intro_screen
 question: |
   We're here to help.
 subquestion: |
+new_changes
   This is a tool for people on SSI or SSDI disability benefits. It will help you write
   a letter to the Social Security Administration (Social Security) or document  
   [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) 
@@ -235,10 +243,19 @@ subquestion: |
   medical condition, any changes in your 'Ticket to Work' status, or any changes in your work 
   or PASS expenses. 
 
-  Before you start, you need to know if you are on
+  This is a tool for people on SSI or SSDI benefits. It will help you write
+  a letter to the Social Security Administration (Social Security) to tell them about 
+  [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) 
+  in your life they need to know about. You must report any changes by the tenth day of the month       after they happen to get an accurate payment of benefits.
+
+  You also can report changes to Social Security by calling +1 800-772-1213 or calling TTY +1 800-325-0778 Monday to Friday in English and other languages. 
+main
+
+  Before you start, you need to know if you are on:
   
-  * SSI (Supplemental Security Income), 
+  * SSI (Supplemental Security Income) or
   * SSDI (Social Security Disability) or
+new_changes
   * SSI and SSDI.
 
     For how to determine if you are on SSI, SSDI or both click [here](https://www.usa.gov/social-security-disability)
@@ -255,6 +272,23 @@ subquestion: |
   full name, 
   address, and 
   Social Security number.
+  * Both SSI and SSDI.
+  
+  If you are working and getting paid, you also need:
+  
+  1. Name and Address of the place you work, 
+  2. Number of hours you work
+  3. How much you are paid
+  
+  Your pay stubs should have this information on them, so having them with you 
+  from the start will be helpful.
+  
+  If you are answering questions  for someone else, you need their:
+  
+  1. Full Name 
+  2. Address 
+  3. Social Security number
+main
 fields: 
   - To continue you must accept the [terms of use](https://vlpnet.org/tos-for-guided-interviews/): intro_screen
     datatype: checkboxes
@@ -678,11 +712,19 @@ subquestion: |
   a final copy.
   
   ${ pdf_concatenate(final_form['preview'], filename="preview_do_not_use.pdf") }
+
+  Remember to come back to this window to continue and sign your form.
+
+  When you sign this form you are saying the following:
+
+  “I declare under penalty of perjury that I have examined all the information on this form, and on     any accompanying statements or forms, and it is true and correct to the best of my knowledge. I       understand that anyone who knowingly gives a false statement about a material fact in this            information, or causes someone else to do so, commits a crime and may be subject to a fine or         imprisonment.”
 continue button field: preview_your_form  
 ---
 id: signature
 question: |
   Sign your letter
+subquestion: |
+  
 signature: client.signature
 under: |
   ${client}
