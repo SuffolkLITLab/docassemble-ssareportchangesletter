@@ -1,3 +1,12 @@
+include:
+  - docassemble.VLPBranding:vlp_branding.yml
+---
+modules:
+  - docassemble.base.util
+  - .ssa
+  - docassemble.ALToolbox.misc
+  - docassemble.income.income
+  - docassemble.GithubFeedbackForm.github_issue
 ---
 metadata:
   title: |
@@ -7,25 +16,15 @@ metadata:
   description: |
     If you get SSI or SSDI (or both), you are required to tell Social Security about changes in your life by the 10th day of the month after the change happened. Failure to do so could result in an overpayment. If this change occurred in the past, you may wish to speak with a legal representative. 
 
-    This tool helps you write a letter to Social Security to report changes, including:
+    This tool helps you report changes to Social Security, including:
 
     * Update to personal information including phone number, address 
-    * Change in living arrangements:  
-         * A change in the number of persons in your household, for instance if you move in 
-           with someone, start living by yourself, or other persons move in or out of the   
-           household. 
-         * Death or spouse or anyone in your household.  
-         * Admission or discharge from an instution such as a jail, prison, detention center,             halfway house, hospital, nursing home, boot camp. 
-         * Leaving the United States for more than 30 days in a row
-         * Receipt of arrrest warrant. 
-    * Changes to your employment status, if you start or stop work, or if there is a change in       pay or hours worked
-    * Changes to your resources 
-         * bank account or account balance
-         * Changes to the value of things you own
-         * Getting help to pay for rent or food
-         * Getting money, for example from from a lawsuit or the lottery
-         * Eligibility for other benefits or payments
-    * Change in marital status, including any same-sex relationships
+    * Change in living arrangements
+    * Leaving the United States for more than 30 days in a row
+    * Receipt of arrrest warrant. 
+    * Changes to your employment status, if you start or stop work, or if there is a change in pay or hours worked
+    * Changes to your resources including account balances or any money received
+    * Change in marital status
     * School attendence if under age 22
     * Change in citizenship or lawful noncitizen status 
     
@@ -37,7 +36,8 @@ metadata:
   can_I_use_this_form: |
     You can use this form if you are on SSI or SSDI and need to report changes to Social Security.
   before_you_start: |
-    Before you start, you need to know if you are on SSI (Supplemental Security Income), SSDI (Social Security Disability), or both. If you are working and getting paid, you also need the name and address of the place you work, the number of hours you work, and how much you are paid. Your pay stubs should have all this information on them, so having them with you from the start will be helpful. If you are answering questions for someone else, you need their full name, address, and Social Security number.
+    Before you start, you need to know if you are on SSI (Supplemental Security Income), SSDI (Social Security Disability), or both. If you are working and getting paid, you also need the name and address of the place you work, the number of hours you work, and how much you are paid. Your pay stubs should have all this information on them, so having them with you from the start will be helpful. 
+    If you are answering questions for someone else, you need their full name, address, and Social Security number.
 
     Make sure you have specific information, like dates and addresses, before you start. This will help you complete the form more quickly.
   maturity: production
@@ -56,17 +56,7 @@ metadata:
       organization: Volunteer Lawyer's Project of the Boston Bar Association
   revision_date: 2021-12-18
   update_notes: |
-    2024 - updated metadata
----
-modules:
-  - docassemble.base.util
-  #- docassemble.ssa.ssa
-  - .ssa
-  - docassemble.income.income
-  - docassemble.GithubFeedbackForm.github_issue  
----
-include:
-  - docassemble.VLPBranding:vlp_branding.yml
+    2024 - updated metadata 
 ---
 features:
   javascript: 
@@ -107,7 +97,7 @@ code: |
   intro_screen
   client.name.first
   client.phone_number
-  client.ssn
+  # client.ssn
   benefits_type
   set_changes
   if working or working_for_self:
@@ -218,8 +208,7 @@ subquestion: |
   a letter to the Social Security Administration (Social Security) or document  
   [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) 
   in your life they need to know about. 
-  You may report some changes directly the SSA by visiting:  
-  https://www.ssa.gov/?utm_source=ssmatters&utm_medium=blog-header&utm_campaign=blog-to-ssa-homepage
+  You may report some changes directly the SSA by visiting [here] (https://www.usa.gov/social-security-disability)
 
   If you get SSI or SSDI (or both), you are required to tell Social Security about changes in 
   your life by the 10th day of the month after the change happened. Failure to do so could 
@@ -334,24 +323,6 @@ fields:
       states_list()
   - Zip: ssa_office.address.zip
     required: False
----
-id: client ssn
-question: |
-  What is your Social Security Number?
-subquestion: |
-   If you are filling out the form in a public place, using a shared computer, or will be printing this form in a public place, do not add your Social Security Number here. Instead, write in your SSN after you print out the form.
-fields:
-  - Social Security Number: client.ssn
-    datatype: ssn
-    validate: |
-      lambda y: not y or is_valid_ssn(y)
-    required: False
-under: |
-  {Why} do we need this?
-terms:
-  - Why: |
-      The Social Security Administration needs this number in order to 
-      apply the new information to your account.
 ---
 features:
   question help button: False
@@ -698,10 +669,7 @@ question: |
 subquestion: |
   Your form is ready for download below. 
   
-  1. Print out two copies of your letter.
-  % if not client.ssn:
-  1. **Add your Social Security Number to your letter.**
-  % endif
+  1. Add your SSN and print out two copies of your letter.
   1. Keep one copy of the letter for yourself. Send the other copy to Social Security.  
   % if hasattr(ssa_office, 'phone_number') and ssa_office.phone_number:
   1. Call your local Social Security office at ${ phone_number_formatted(ssa_office.phone_number) } to find out how to get your letter to them. You can mail, fax, or deliver it in person if your office is open for in-person visits.
@@ -719,10 +687,54 @@ attachment:
   name: ${client}'s Letter to SSA
   variable name: final_form[i]
   filename: ${space_to_underscore(format_date(today()) + client.possessive('letter to SSA'))}
-  docx template file: ssa_report_change.docx
-  valid formats:
-    - pdf
-    - docx
+  pdf template file: report_changes_to_ssa.pdf
+  fields:
+    - "user_name": ${client}
+    - "user_representative": ""
+    - "user_representative_relationship": ""
+    - "summary_of_changes": ${summary_of_changes}
+    - "signature_date": letter_date
+    - "user_signature": client.signature
+    - "client_phone_number": client.phone_number
+    - "client_address_block": client.address_block
+    - "client_address_city_state": ""
+    - "client_address_zip": ""
+---
+template: summary_of_changes
+content: | 
+  % for job in employer_jobs:
+  On about ${job.start_date}, I started working at ${job.employer} at ${job.employer_address}. I work ${job.normalized_hours(12)} hours every month and get paid 
+  % if job.is_hourly: 
+  ${currency(job.hourly_rate)} per hour 
+  % else: 
+  ${currency(job.amount(period_to_use=12))} 
+  % endif
+  .
+  % if job.have_pay_stubs: 
+  Copies of my pay stubs are attached. 
+  % endif
+  % endfor
+  
+  % for job in self_jobs:
+  In ${job.start_date}, I started working for myself doing ${job.self_employment_type}. I work ${job.normalized_hours(12)} hours every month. My business earns about ${currency(job.amount(period_to_use=12))} every month. It costs me ${currency(job.deductions)} in expenses to run my business.
+  % endfor
+  
+  % if benefits_type == 'ssi' and changes.true_values().number() > 0:
+  I ${'also' if working or working_for_self else ''} need to report to Social Security that:
+  % for change in changes.true_values():
+  % if change == "I moved":
+  • I moved on ${change_details[change].date}. My new address is ${client.address.on_one_line()}
+  % elif change == "The number of people in my household changed":
+  • My household changed on ${change_details[change].date}. ${change_details['The number of people in my household changed'].reasons.true_values()}.
+  % else:
+  • ${change} on ${change_details[change].date}.
+  % endif
+  % endfor
+  % endif
+  
+  ${showifdef('other_changes')}
+  
+  ${showifdef('changes_details')}
 ---
 code: |
   ssa_office.name.text = ""
