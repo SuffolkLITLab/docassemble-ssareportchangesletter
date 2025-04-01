@@ -204,38 +204,26 @@ field: intro_screen
 question: |
   We're here to help.
 subquestion: |
-  This is a tool for people on SSI or SSDI disability benefits. It will help you write
-  a letter to the Social Security Administration (Social Security) or document  
-  [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) 
-  in your life they need to know about. 
-  You may report some changes directly the SSA by visiting [here] (https://www.usa.gov/social-security-disability)
+  This is a tool for people on SSI or SSDI disability benefits. It helpschange_choiceschange_choices notify the Social Security Administration (Social Security) or document [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) to avoid potential over or under payment of benefits.
+  You may report some changes directly the SSA by visiting [here](https://www.usa.gov/social-security-disability).
 
-  If you get SSI or SSDI (or both), you are required to tell Social Security about changes in 
-  your life by the 10th day of the month after the change happened. Failure to do so could 
-  result in an overpayment. If this change occurred in the past, you may wish to speak with a 
-  legal representative. 
-  
-  Updates may include updates to personal information, changes in living arrangements, 
-  changes in employment, changes to resources, changes in marital status, living outside the 
-  United States for more than 30 days in a row, changes in citizenship or lawful noncitizen 
-  status. 
+  You are required to tell Social Security about changes in your life by the 10th day of the month after the change happened. Failure to do so could result in an overpayment. Updates may include contact information, changes in living arrangements, changes in employment, changes to resources, changes in marital status, living outside the United States for more than 30 days in a row, changes in citizenship or lawful noncitizen status. 
 
-  If you are a person with a disability, you may need to also report improvements in your 
-  medical condition, any changes in your 'Ticket to Work' status, or any changes in your work 
-  or PASS expenses. 
+  If you are a person with a disability, you may need to also report improvements in your medical condition, any changes in your 'Ticket to Work' status, or any changes in your work or PASS expenses. 
 
   Before you start, you need to know if you are on
   
   * SSI (Supplemental Security Income), 
   * SSDI (Social Security Disability) or
   * SSI and SSDI.
-
-    For how to determine if you are on SSI, SSDI or both click [here](https://www.usa.gov/social-security-disability)
+    
+  For how to determine if you are on SSI, SSDI or both click [here](https://www.usa.gov/social-security-disability).
   
   If you are working and getting paid, you also need:
-  the name and address of the place you work, 
-  the number of hours you work, and
-  how much you are paid.
+  
+  * the name and address of the place you work, 
+  * the number of hours you work, and
+  * how much you are paid.
   
   Your pay stubs should have all this information on them, so having them with you 
   from the start will be helpful.
@@ -361,6 +349,9 @@ fields:
   - I started working for myself: working_for_self
     datatype: yesnowide
   - no label: changes
+    show if: 
+      code: | 
+        benefits_type =='ssi'
     datatype: checkboxes
     choices:
       - I moved
@@ -415,7 +406,7 @@ fields:
     choices:
       - Myself: self
       - Someone else: employer
-  - Employer's: jobs[i].employer
+  - Employer's name: jobs[i].employer
     show if: 
       variable: jobs[i].employer_type
       is: "employer"
@@ -693,7 +684,7 @@ attachment:
     - "user_representative": ""
     - "user_representative_relationship": ""
     - "summary_of_changes": ${summary_of_changes}
-    - "signature_date": letter_date
+    - "letter_date": ${letter_date}
     - "user_signature": client.signature
     - "client_phone_number": client.phone_number
     - "client_address_block": client.address_block
