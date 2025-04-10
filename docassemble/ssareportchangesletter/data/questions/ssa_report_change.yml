@@ -204,7 +204,7 @@ field: intro_screen
 question: |
   We're here to help.
 subquestion: |
-  This is a tool for people on SSI or SSDI disability benefits. It helpschange_choiceschange_choices notify the Social Security Administration (Social Security) or document [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) to avoid potential over or under payment of benefits.
+  This is a tool for people on SSI or SSDI disability benefits. It helps notify the Social Security Administration (Social Security) or document [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) to avoid potential over or under payment of benefits.
   You may report some changes directly the SSA by visiting [here](https://www.usa.gov/social-security-disability).
 
   You are required to tell Social Security about changes in your life by the 10th day of the month after the change happened. Failure to do so could result in an overpayment. Updates may include contact information, changes in living arrangements, changes in employment, changes to resources, changes in marital status, living outside the United States for more than 30 days in a row, changes in citizenship or lawful noncitizen status. 
@@ -685,16 +685,16 @@ attachment:
     - "user_representative_relationship": ""
     - "summary_of_changes": ${summary_of_changes}
     - "letter_date": ${letter_date}
-    - "user_signature": client.signature
+    - "user_signature": ${client.signature}
     - "client_phone_number": client.phone_number
-    - "client_address_block": client.address_block
-    - "client_address_city_state": ""
-    - "client_address_zip": ""
+    - "client_address_block": client.address.line_one()
+    - "client_address_city_state": ${client.address.city} ${client.address.state}
+    - "client_address_zip": ${client.address.zip}
 ---
 template: summary_of_changes
 content: | 
   % for job in employer_jobs:
-  On about ${job.start_date}, I started working at ${job.employer} at ${job.employer_address}. I work ${job.normalized_hours(12)} hours every month and get paid 
+  On about ${job.start_date}, I started working at ${job.employer} at ${job.employer_address}. I work approximately ${round(job.normalized_hours(12))} hours every month and get paid 
   % if job.is_hourly: 
   ${currency(job.hourly_rate)} per hour 
   % else: 
@@ -707,7 +707,7 @@ content: |
   % endfor
   
   % for job in self_jobs:
-  In ${job.start_date}, I started working for myself doing ${job.self_employment_type}. I work ${job.normalized_hours(12)} hours every month. My business earns about ${currency(job.amount(period_to_use=12))} every month. It costs me ${currency(job.deductions)} in expenses to run my business.
+  In ${job.start_date}, I started working for myself doing ${job.self_employment_type}. I work approximately ${round(job.normalized_hours(12))} hours every month. My business earns about ${currency(job.amount(period_to_use=12))} every month. It costs me ${currency(job.deductions)} monthly in expenses to run my business.
   % endfor
   
   % if benefits_type == 'ssi' and changes.true_values().number() > 0:
