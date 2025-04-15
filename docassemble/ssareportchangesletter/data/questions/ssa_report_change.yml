@@ -1,5 +1,6 @@
 include:
   - docassemble.VLPBranding:vlp_branding.yml
+  - docassemble.ssa:ssa.yml
 ---
 modules:
   - docassemble.base.util
@@ -97,6 +98,7 @@ code: |
   intro_screen
   client.name.first
   client.phone_number
+  
   # client.ssn
   benefits_type
   set_changes
@@ -164,10 +166,49 @@ code: |
     changes = DAEmpty()
   set_changes = True
 ---
+id: which office
+question: |
+  What Social Security office do you want to send the letter to?
+subquestion: |
+  % if found_offices:
+  We have found the following offices that are close to your address.
+  
+  ${map_of([office for office in officelist])}
+
+  If there is more than one result, you should choose the office that serves your city
+  or town.
+  Use the [Office locator](https://secure.ssa.gov/ICON/main.jsp) to find the
+  SSA office that serves your city.
+  % else:
+  You can use the [Office locator](https://secure.ssa.gov/ICON/main.jsp) to find
+  the Social Security Office that serves your city or town.
+  % endif
+fields:
+  - Social Security Office: ssa_office
+    datatype: object_radio
+    # input type: radio
+    choices: officelist
+    none of the above: True
+    disable others: True
+    object labeler: |
+      lambda y: (y.address.on_one_line(show_country=False))
+  - note: |
+      Choose an office above, or use the [Office locator](https://secure.ssa.gov/ICON/main.jsp)
+    show if: found_offices
+  - Address: ssa_office.address.address
+  - Suite: ssa_office.address.unit
+    required: False
+  - City: ssa_office.address.city
+  - State: ssa_office.address.state
+    code: |
+      states_list()
+---
 code: |
   officelist.load_offices(client.address)
-  found_offices = officelist.number() > 0
   officelist.gathered = True
+---
+code: |
+  found_offices = officelist.number() > 0
 ---
 code: |
   letter_date = today()
@@ -207,9 +248,7 @@ subquestion: |
   This is a tool for people on SSI or SSDI disability benefits. It helps notify the Social Security Administration (Social Security) or document [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) to avoid potential over or under payment of benefits.
   You may report some changes directly the SSA by visiting [here](https://www.usa.gov/social-security-disability).
 
-  You are required to tell Social Security about changes in your life by the 10th day of the month after the change happened. Failure to do so could result in an overpayment. Updates may include contact information, changes in living arrangements, changes in employment, changes to resources, changes in marital status, living outside the United States for more than 30 days in a row, changes in citizenship or lawful noncitizen status. 
-
-  If you are a person with a disability, you may need to also report improvements in your medical condition, any changes in your 'Ticket to Work' status, or any changes in your work or PASS expenses. 
+  You are required to tell Social Security about changes in your life by the 10th day of the month after the change happened. Failure to do so could result in incorrect payments.
 
   Before you start, you need to know if you are on
   
@@ -228,10 +267,6 @@ subquestion: |
   Your pay stubs should have all this information on them, so having them with you 
   from the start will be helpful.
   
-  If you are answering questions for someone else, you need their:
-  full name, 
-  address, and 
-  Social Security number.
 fields: 
   - To continue you must accept the [terms of use](https://vlpnet.org/tos-for-guided-interviews/): intro_screen
     datatype: checkboxes
@@ -658,7 +693,7 @@ question: |
   [BR]
   ${ final_form['final'] }
 subquestion: |
-  Your form is ready for download below. 
+  ##__Your form is ready for download below__
   
   1. Add your SSN and print out two copies of your letter.
   1. Keep one copy of the letter for yourself. Send the other copy to Social Security.  
@@ -686,8 +721,8 @@ attachment:
     - "summary_of_changes": ${summary_of_changes}
     - "letter_date": ${letter_date}
     - "user_signature": ${client.signature}
-    - "client_phone_number": client.phone_number
-    - "client_address_block": client.address.line_one()
+    - "client_phone_number": ${client.phone_number}
+    - "client_address_block": ${client.address.line_one()}
     - "client_address_city_state": ${client.address.city} ${client.address.state}
     - "client_address_zip": ${client.address.zip}
 ---
