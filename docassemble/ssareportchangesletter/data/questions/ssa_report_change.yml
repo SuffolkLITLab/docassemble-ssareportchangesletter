@@ -1,6 +1,7 @@
 include:
   - docassemble.VLPBranding:vlp_branding.yml
   - docassemble.ssa:ssa.yml
+  - docassemble.MATCTheme:matc_theme.yml
 ---
 modules:
   - docassemble.base.util
@@ -12,7 +13,7 @@ modules:
 metadata:
   title: |
     Report changes to Social Security
-  short title: |
+  interview short title: |
     SSA Report Changes
   description: |
     If you get SSI or SSDI (or both), you are required to tell Social Security about changes in your life by the 10th day of the month after the change happened. Failure to do so could result in an overpayment. If this change occurred in the past, you may wish to speak with a legal representative. 
@@ -63,7 +64,11 @@ features:
   javascript: 
     - ssa.js
     - phone.js 
-  question back button: True    
+  question help button: True
+  question back button: True
+  default icons: material icons
+  navigation: True
+  progress bar: True
 ---
 imports:
   - jinja2.utils
@@ -90,21 +95,22 @@ comment: |
   Test URL for SSA offices:
   
   https://services6.arcgis.com/zFiipv75rloRP5N4/ArcGIS/rest/services/Office_Points/FeatureServer/1/query?where=&objectIds=&time=&geometry=-96.915919%2C32.693022&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=10&units=esriSRUnit_StatuteMile&returnGeodetic=false&outFields=*&returnGeometry=true&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=4326&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnDistinctValues=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pgeojson&token=
+
 ---
 id: order
 mandatory: True
 code: |
   letter_date
   intro_screen
+  nav.set_section('Getting Started') 
   client.name.first
   client.phone_number
-  
   # client.ssn
   benefits_type
   set_changes
   if working or working_for_self:
     jobs.gather()
-  
+
   # changes
   other_changes
   
@@ -148,7 +154,9 @@ code: |
         change_details['My immigration status changed'].date 
         
   changes_details
+  officelist.gathered
   ssa_office.address.address
+  nav.set_section('Finishing up')
   preview_your_form
   client.signature
   store_variables_snapshot(data={'zip':client.address.zip,
@@ -160,6 +168,12 @@ code: |
     'ssa_office': str(ssa_office.address.on_one_line()),
     })
   download_form
+---
+sections: 
+  - Getting Started
+  - Changes to Report 
+  - Social Security Offices
+  - Finishing Up
 ---
 code: |
   if benefits_type == 'ssdi':
@@ -470,7 +484,7 @@ fields:
   - Total (gross) pay each pay period: jobs[i].value
     datatype: currency
     hide if: jobs[i].is_hourly
-  - What deductible expenses do you have for this job?: jobs[i].deductions
+  - What monthly deductible expenses do you have for this job?: jobs[i].deductions
     datatype: currency
     show if:
       variable: jobs[i].employer_type
@@ -725,6 +739,7 @@ attachment:
     - "client_address_block": ${client.address.line_one()}
     - "client_address_city_state": ${client.address.city} ${client.address.state}
     - "client_address_zip": ${client.address.zip}
+
 ---
 template: summary_of_changes
 content: | 
