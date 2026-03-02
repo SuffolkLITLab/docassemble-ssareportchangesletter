@@ -52,7 +52,7 @@ main
   estimated_completion_delta: 15
   languages:
     - en
-  jurisdiction: NAM-US-US+MA
+  jurisdiction: NAM-US-US
   help_page_url: https://www.ssa.gov/ssi/reporting/changes
   help_page_title: Report changes to your situation
   LIST_topics:
