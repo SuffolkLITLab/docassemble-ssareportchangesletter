@@ -39,6 +39,7 @@ code: |
   officelist.load_offices(my_address)
   officelist.gathered = True
 ---
+id: "your address"
 question: |
   Your address
 fields:
@@ -57,6 +58,7 @@ comment: |
   officelist is a special object type. To get map_of to understand it, we need
   to tell it to treat it like a regular list of Persons by casting it to list()
 event: display_offices
+id: "nearest offices"
 question: |
   Nearest Offices
 subquestion: |
