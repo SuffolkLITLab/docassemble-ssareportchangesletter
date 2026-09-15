@@ -60,6 +60,7 @@ subquestion: |
   ${interview_url_as_qr()}
 ---
 event: add_entry
+id: "add an item"
 question: |
   Add an item
 subquestion: |
@@ -73,6 +74,7 @@ section: add_entry
 ---
 need: calculated_ledger
 event: review_ledger
+id: "review"
 question: |
   Review
 subquestion: |
@@ -84,6 +86,7 @@ section: review_ledger
 ---
 need: calculated_ledger
 event: download
+id: "download your ledger"
 question: |
   Download your ledger
 subquestion: |
@@ -104,6 +107,7 @@ columns:
 edit:
   - value
 ---
+id: "starting balance"
 question: |
   Starting balance
 subquestion: |
@@ -118,6 +122,7 @@ fields:
       - Original balance: original
       - Balance as of last report: last_report
 ---
+id: "add a transaction"
 question: |
   Add a transaction
 fields:
@@ -165,6 +170,7 @@ fields:
     image upload type: jpeg
 ---
 event: the_end
+id: "the end"
 question: The end
 ---
 reconsider: True

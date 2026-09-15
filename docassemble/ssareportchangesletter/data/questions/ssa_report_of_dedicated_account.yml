@@ -445,7 +445,9 @@ section: recipient_info
 id: lives in institution
 question: |
   Does ${client} live in an institution or care facility?
-yesno: client_in_institution  
+fields:
+  - no label: client_in_institution
+    datatype: yesnoradio
 ---
 section: spending
 id: low expenditures explanation
@@ -464,7 +466,7 @@ question: |
   What kind of accounts have you used to save
   the benefits?
 fields:
-  - no label: account_types
+  - "What kind of accounts have you used to save the benefits?": account_types
     datatype: checkboxes
     choices:
       - Savings account: savings

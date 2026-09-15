@@ -334,7 +334,7 @@ fields:
     required: False
   - Last name: client.name.last
 ---
-id: which office
+id: "which office 2"
 question: |
   What Social Security office do you want to send the letter to?
 subquestion: |
@@ -448,7 +448,9 @@ question: |
   So far you have told us about ${ len(jobs.complete_elements()) } jobs.
 subquestion: |
   Do you have any other jobs to report?
-yesno: jobs.there_is_another
+fields:
+  - no label: jobs.there_is_another
+    datatype: yesnoradio
 ---
 id: job details
 question: | 
