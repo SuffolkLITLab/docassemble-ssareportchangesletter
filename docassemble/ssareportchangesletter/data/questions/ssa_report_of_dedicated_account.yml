@@ -504,7 +504,7 @@ subquestion: |
   Take a look at the amounts written in box 6 for this question.
 
   [CENTER]
-  [FILE box_6.png]
+  [FILE box_6.png, None, The amounts on the form are to the right side of the page in box 6, which starts with Past-due SSI benefits depositied by SSA in dedicated account]
 fields:
   - Past due SSI benefits deposited by SSA in dedicated account: report_dedicated_account_deposits
     datatype: currency
