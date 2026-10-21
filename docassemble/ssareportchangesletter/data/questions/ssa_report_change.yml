@@ -200,7 +200,9 @@ fields:
       lambda y: (y.address.on_one_line(show_country=False))
   - note: |
       Choose an office above, or use the [Office locator](https://secure.ssa.gov/ICON/main.jsp)
-    show if: found_offices
+    show if:
+      code: |
+        found_offices
   - Address: ssa_office.address.address
   - Suite: ssa_office.address.unit
     required: False
@@ -252,7 +254,7 @@ question: |
   We're here to help.
 subquestion: |
   This is a tool for people on SSI or SSDI disability benefits. It helps notify the Social Security Administration (Social Security) or document [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) to avoid potential over or under payment of benefits.
-  You may report some changes directly the SSA by visiting [here](https://www.usa.gov/social-security-disability).
+  You may report some changes [directly to the SSA at this link](https://www.usa.gov/social-security-disability).
 
   You are required to tell Social Security about changes in your life by the 10th day of the month after the change happened. Failure to do so could result in incorrect payments.
 
@@ -264,7 +266,7 @@ subquestion: |
   * SSDI (Social Security Disability) or
   * SSI and SSDI.
     
-  For how to determine if you are on SSI, SSDI or both click [here](https://www.usa.gov/social-security-disability).
+  For how to determine if you are on SSI, SSDI, or both, [visit the SSA's website](https://www.usa.gov/social-security-disability).
   
   If you are working and getting paid, you also need:
   
@@ -357,7 +359,9 @@ fields:
       lambda y: (y.address.on_one_line())
   - note: |
       Choose an office above, or use the [Office locator](https://secure.ssa.gov/ICON/main.jsp)
-    show if: found_offices
+    show if:
+      code: |
+        found_offices
   # - Office name: ssa_office.name.text
   - Address: ssa_office.address.address
   - Suite: ssa_office.address.unit
