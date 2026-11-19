@@ -18,7 +18,7 @@ metadata:
     Use this interview to prepare your own statement. You can describe changes in work, income, health, resources or living arrangements.
   before_you_start: |
     Have your address, the dates of your changes and any pay stubs handy. You can add your Social Security number to the completed statement after printing it.
-  maturity: testing
+  maturity: production
   estimated_completion_minutes: 15
   estimated_completion_delta: 15
   languages:

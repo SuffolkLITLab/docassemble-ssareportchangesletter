@@ -7,7 +7,7 @@ metadata:
     Use this worksheet if SSA asked for a full SSA-6233 report or told you to complete only questions 6 through 8.
   before_you_start: |
     Gather the report SSA mailed you, account statements for the report period, and records of deposits and purchases.
-  maturity: testing
+  maturity: production
   estimated_completion_minutes: 30
   languages:
     - en
