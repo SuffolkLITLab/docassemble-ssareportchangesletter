@@ -5,17 +5,7 @@ metadata:
 modules:
   - docassemble.income.income
 ---
-include:
-  - docassemble.gbls:basic-questions-gbls.yml
-  - docassemble.ssa:ssa.yml
----
-features:
-  javascript: 
-    - ssa.js
----
 objects:
-  - client: Individual
-  - rep_payee: Individual
   - dedicated_account_ledger: Ledger.using(there_are_any=True, complete_attribute='value', there_is_another=False)
 ---
 features:
@@ -23,26 +13,27 @@ features:
 ---
 sections:
   - intro: Introduction
-  - add_entry: Add a purchase
   - review_ledger: Review your purchases
-  - personal_info: Information about you
   - download: Download
-progressive: False
+progressive: True
 ---
 id: order
 mandatory: True
 code: |
-  intro
+  ledger_intro
   dedicated_account_ledger[0].value
   review_ledger
 ---
 reconsider: True
 code: |
+  # Keep docassemble's edit links attached to the correct entry after sorting.
+  dedicated_account_ledger.sort_elements(key=lambda entry: entry.date)
   dedicated_account_ledger.calculate()
   calculated_ledger = True
 ---
 id: intro screen
-event: intro
+section: intro
+continue button field: ledger_intro
 question: |
   Dedicated Account Ledger
 subquestion: |
@@ -50,27 +41,7 @@ subquestion: |
   dedicated account over the course of the year. Use this tool
   so you are ready when SSA asks you to report your spending.
 
-  % if len(dedicated_account_ledger) > 0:
-  So far you've recorded ${len(dedicated_account_ledger) } 
-  ${ quantity_noun(len(dedicated_account_ledger), 'transaction')}.
-  % endif
-  
-  ${dedicated_account_ledger.add_action()}
-
-  ${interview_url_as_qr()}
----
-event: add_entry
-id: "add an item"
-question: |
-  Add an item
-subquestion: |
-  Before you buy something, you should consider getting pre-approval from
-  the Social Security administration.
-  
-  Current account balance: ${currency(dedicated_account_ledger.total()) }
-  
-  ${dedicated_account_ledger.add_action()}
-section: add_entry
+  Start with the opening balance, then record deposits and purchases.
 ---
 need: calculated_ledger
 event: review_ledger
@@ -81,7 +52,9 @@ subquestion: |
   ${dedicated_account_ledger.table}
   **Current balance:** ${currency(dedicated_account_ledger.total())}
 
-  ${dedicated_account_ledger.add_action()}
+  ${dedicated_account_ledger.add_action(label="Add a transaction")}
+
+  [Download your ledger](${url_action("download")})
 section: review_ledger  
 ---
 need: calculated_ledger
@@ -90,7 +63,11 @@ id: "download your ledger"
 question: |
   Download your ledger
 subquestion: |
-  ${ account_ledger }
+  [Download PDF](${account_ledger.pdf.url_for()})
+
+  [Download Word document](${account_ledger.docx.url_for()})
+
+  [Return to your ledger](${url_action("review_ledger")})
 section: download
 ---
 table: dedicated_account_ledger.table
@@ -100,12 +77,12 @@ columns:
       row_item.date
   - Amount: |
       currency(row_item.amount())
-  - Running total: |
+  - Running balance: |
       currency(row_item.running_total)
   - Description: |
-      row_item.description
-edit:
-  - value
+      ({"original": "Opening balance", "last_report": "Balance as of last report"}.get(row_item.description, row_item.description) if row_index == 0 else row_item.description)
+  - Actions: |
+      dedicated_account_ledger.item_actions(row_item, row_index, "value", delete=row_index > 0, confirm=True)
 ---
 id: "starting balance"
 question: |
@@ -117,10 +94,14 @@ fields:
     datatype: date
   - Starting balance: dedicated_account_ledger[0].value
     datatype: currency
+    min: 0
   - Description:  dedicated_account_ledger[0].description
     choices:
       - Original balance: original
       - Balance as of last report: last_report
+validation code: |
+  if any(entry.date < dedicated_account_ledger[0].date for entry in dedicated_account_ledger.elements[1:]):
+    validation_error("Choose a date on or before the first transaction.", field="dedicated_account_ledger[0].date")
 ---
 id: "add a transaction"
 question: |
@@ -133,6 +114,7 @@ fields:
       - Deposit: income
   - Date: dedicated_account_ledger[i].date
     datatype: date
+    min: ${ dedicated_account_ledger[0].date }
   - Amount: dedicated_account_ledger[i].value
     datatype: currency
     min: 0
@@ -166,7 +148,7 @@ fields:
   - Receipt: dedicated_account_ledger[i].receipt
     show if: dedicated_account_ledger[i].has_receipt
     datatype: camera
-    maximum image size: 100
+    maximum image size: 2000
     image upload type: jpeg
 ---
 event: the_end

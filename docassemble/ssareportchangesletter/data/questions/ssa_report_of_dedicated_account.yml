@@ -1,262 +1,290 @@
-initial: True
-code: |
-  set_info(user=rep_payee)
----
 metadata:
   title: Report of benefits and Dedicated Account
-  short title: Dedicated Account Ledger
+  short title: Dedicated account worksheet
   description: |
-    This interview helps a parent or representative payee of a child on SSI
-    keep track of money spent from a dedicated account with the child's 
-    retroactive SSI benefits.
+    Prepare answers for the Representative Payee Report of Benefits and Dedicated Account that Social Security mailed you.
   can_I_use_this_form: |
-    You can use this interview to fill out a Report of Benefits and Dedicated Account 
-    or to keep track of what you spent. It can be used by:
-
-    * A parent, or
-    * A representative payee of a child or dependent who gets SSI
+    Use this worksheet if SSA asked for a full SSA-6233 report or told you to complete only questions 6 through 8.
   before_you_start: |
-    Before you start, gather any records that show what you spent over the last year.
-    
-    Include:
-
-    * The letter from Social Security that tells you the period of the report
-    * The amount of money in the dedicated account as of your last report to SSA
-    * The amount of money you deposited into the account since your last report to SSA
-    * The amount of money you spent from the account since your last report to SSA
-  maturity: production
+    Gather the report SSA mailed you, account statements for the report period, and records of deposits and purchases.
+  maturity: testing
   estimated_completion_minutes: 30
-  estimated_completion_delta: 15
   languages:
     - en
-  help_page_url: https://www.masslegalhelp.org/public-benefits-ssi/social-security-ssi
-  help_page_title: Social Security and SSI
+  jurisdiction: NAM-US
+  help_page_url: https://www.ssa.gov/payee/
+  help_page_title: Help for representative payees
+  form_titles:
+    - Report of Benefits and Dedicated Account
+  original_form: https://www.ssa.gov/payee/NewGuide/ssa-6233exhibitsA.pdf
+  form_numbers:
+    - SSA-6233-BK
   LIST_topics:
     - BE-01-03-00-00
   tags:
     - BE-01-03-00-00
-  jurisdiction: NAM-US
-  original_form: https://secure.ssa.gov/apps10/public/pomsimages.nsf/gfx_num/G-SSA-6233-BK-1/$File/G-SSA-6233-BK-1.pdf
-  form_numbers:
-    - SSA-6233-BK-1
-  form_titles: 
-    - Report of Benefits and Dedicated Account
-  update_notes: |
-    2024 - added metadata
+---
+include:
+  - vlp_branding.yml
 ---
 modules:
   - docassemble.income.income
-  - docassemble.GithubFeedbackForm.github_issue
 ---
-include:
-  #- docassemble.gbls:basic-questions-gbls.yml
-  - docassemble.ssa:ssa.yml
-  - docassemble.VLPBranding:vlp_branding.yml
+objects:
+  - client: Individual
+  - rep_payee: Individual
+  - dedicated_account: Ledger
+  - dedicated_account_deposits: Ledger
+---
+initial: True
+code: |
+  set_info(user=rep_payee)
 ---
 features:
-  javascript: 
-    - ssa.js
-    - phone.js
   navigation: True
   progress bar: True
   question back button: True
   navigation back button: False
 ---
-default screen parts:
-  under: |
-    % if not user_logged_in():
-    [:sign-in-alt: Sign-in](${url_of('login', next=interview_url())}) or [register](${url_of('register', next=interview_url())}) to save your progress (optional).
-    % endif
-    [:comment-dots: Feedback](${ feedback_link(user_info(), github_repo="docassemble-ssareportchangesletter", github_user="nonprofittechy") })    
-  pre: |
-    % if get_config('debug'):
-    `id: ${ user_info().question_id }`
-    % endif
----
-objects:
-  - client: Individual
-  - rep_payee: Individual
-  # unused
-  - benefits_expenditures: ValueList.using(there_are_any=True)
-  - dedicated_account: Ledger
-  - dedicated_account_deposits: Ledger
----
 sections:
-  - intro: Introduction
-  - recipient_info: Information about the recipient
-  - rep_info: Information about you
-  - events: Events that happened over the last year
-  - spending: Money you spent
-  - receipt_entry: Receipts
-  - signature: Signature
-  - download_report: Download report
+  - intro: Instructions
+  - people: Beneficiary and payee
+  - regular: Regular benefits
+  - dedicated: Dedicated account
+  - receipts: Receipts
+  - download: Download
 ---
 id: order
-scan for variables: False
 mandatory: True
 code: |
-  intro_screen
-  #if len(ledger_interviews) > 0: # Check for existing ledgers from past sessions
-  #  skip_ledger
+  if annual_scope == "unsure":
+    full_report_help
+  accepted_worksheet_terms
   client.name.first
-  client.address.address
   rep_payee.name.first
-  rep_payee.address.address
-  rep_payee.relationship
-  had_felony
-  dedicated_account_deposits
-  # added_benefits
+  date_to
+  if annual_scope == "full":
+    full_events_reviewed
+    full_spending_reviewed
+    if regular_saved > 0:
+      full_savings_reviewed
   dedicated_account_deposits.gather()
   dedicated_account.gather()
   review_account
-  gather_receipts
-  if not used_for_valid_purpose:
-    how_spending_benefited_client
-  rep_payee.signature
-  # final_report
-  store_variables_snapshot(data={'zip':client.address.zip,
-    'city': client.address.city,
-    'state': client.address.state,
-    'relationship_to_recipient':rep_payee.relationship,
-    'date':today(),
-    #'ssa_office': str(ssa_office.address.on_one_line()),
-    })  
+  if dedicated_account.number():
+    gather_receipts
+    if not used_for_valid_purpose:
+      how_spending_benefited_client
+  reported_ending_balance
+  store_variables_snapshot(data={'date': today(), 'report_scope': annual_scope})
   pdf_report
-#---
-#code: |
-#  dedicated_account.there_are_any = deposited_into_dedicated_account or withdrew_money_from_dedicated_account 
 ---
-#code: |
-#  # int_path = 'docassemble.ssareportchangesletter'
-#  int_path = 'docassemble.playground7'
-#  ledger_interviews = interview_list(filename=int_path + ':ssa_dedicated_account_ledger.yml')[0]
-#  ledger_choices_temp = []
-#  for index, ledger in enumerate(ledger_interviews):
-#    ledger_choices_temp.append({index: ledger.get('session')})
-#  ledger_choices = ledger_choices_temp
----
-id: intro screen
+id: worksheet scope
 section: intro
 question: |
-  Help for Parents of Children on SSI
-decoration: table
+  Which parts of Form SSA-6233 did Social Security ask you to complete?
 subquestion: |
-  This interview helps a parent or representative payee of a child on SSI
-  keep track of money spent from a dedicated account with the child's 
-  retroactive SSI benefits. 
-  
-  [Learn more about the special 
-  rules for dedicated accounts](http://www.gbls.org/sites/default/files/cdp_spending_kit_full.pdf). It's a good idea to read through the Saving 
-  and Spending Workbook before completing this interview.  
-  
-  You can use this interview to fill out a Report of Benefits and Dedicated Account 
-  or only to keep track of what you spent. 
-  
-  If you would like to use this interview to keep track of expenses, it's a good idea to 
-  sign up for an account so you can save your work and come back to it. 
+  This worksheet helps you report activity in a dedicated account. Have the report SSA mailed you and your account statements ready.
+fields:
+  - Your instructions from SSA: annual_scope
+    input type: radio
+    choices:
+      - My Social Security office told me to complete only questions 6 through 8: "yes"
+      - SSA wants the full report: full
+      - I am not sure: unsure
+---
+id: full report help
+section: intro
+event: full_report_help
+question: |
+  Check the instructions on your SSA report
+subquestion: |
+  Contact the office listed on your notice and ask which questions to complete. Return here when you know which parts you need.
 
-continue button field: intro_screen  
-fields: 
-  - To continue you must accept the [terms of use](https://vlpnet.org/tos-for-guided-interviews/): intro_screen
+  If you need another copy or help reaching your office, call Social Security at 1-800-772-1213. Follow the deadline in your notice.
+---
+id: worksheet terms
+section: intro
+question: |
+  Before you start
+subquestion: |
+  This tool helps you prepare a worksheet. You will still need to complete, sign, and return the form SSA sent. Review the [terms of use](https://vlpnet.org/tos-for-guided-interviews/) before continuing.
+fields:
+  - Terms of use: accepted_worksheet_terms
     datatype: checkboxes
     minlength: 1
-    validation messages:
-      minlength: |
-        You must accept the terms of use to continue.
     choices:
-      - I accept the terms of use: i_accept
-  
-under: |
-  _This website is not giving you legal advice. If you need legal advice, consult a lawyer._  
-
+      - I accept the terms of use: accepted
 ---
-# Below was used for an ongoing account ledger that has not been implemented
-#id: previous ledgers
-#question: |
-#  You have a saved ledger
-#subquestion: |
-#  It looks like you have used this web page to track your spending
-#  throughout the year. You have ${len(ledger_interviews)} saved reports. 
-#  Well done!
-#
-#  You can copy information from your saved ledger into this report.
-#fields:
-#  - Choose a saved ledger to use in this report: old_ledger
-#    input type: radio
-#    code: ledger_choices
-#    show if: 
-#      variable: skip_ledger
-#      is: False
-#
-#  - Skip the saved ledger: skip_ledger
-#    datatype: yesno
-#    default: False
----
-id: address
-section: rep_info
+id: rep payee name
+section: people
 question: |
-  What is your address?
+  What is your name?
 fields:
-  - Address: rep_payee.address.address
-    address autocomplete: True
-  - Unit: rep_payee.address.unit
+  - First name: rep_payee.name.first
+  - Middle name: rep_payee.name.middle
     required: False
-  - City: rep_payee.address.city
-  - State: rep_payee.address.state
-    code: |
-      states_list()
-    default: "MA"
-  - Zip: rep_payee.address.zip
-  - What is your phone number?: rep_payee.phone_number
-    datatype: tel
+  - Last name: rep_payee.name.last
 ---
-id: signature
-section: signature
-generic object: Individual
+id: recipient name
+section: people
 question: |
-  ${capitalize(x.possessive('signature'))}
-signature: x.signature
-#---
-#question: |
-#  Did you put any money in or take any money out of your dedicated account in the
-#  last year?
-#subquestion: |
-#  Answer yes if you spent any money or added any money after the last report you sent
-#  Social Security.
-# yesno: dedicated_account.there_are_any
+  Who is getting the Social Security Benefits?
+subquestion: |
+  List the name of the person who you are the rep payee
+  for.
+fields:
+  - First name: client.name.first
+  - Middle name: client.name.middle
+    required: False
+  - Last name: client.name.last
+---
+id: time period
+section: people
+question: |
+  What time does this report cover?
+subquestion: |
+  Look at the letter you got from Social Security to find the period of the report.
+  If you don't have the letter, call Social Security at 1-800-772-1213.
+fields:
+  - Report begins: date_from
+    datatype: date
+  - Report ends: date_to
+    datatype: date
+validation code: |
+  if date_to < date_from:
+    validation_error("Enter an end date on or after the start date.", field="date_to")
+---
+id: full report events
+section: regular
+question: |
+  What happened during the report period?
+fields:
+  - Were you convicted of a felony during this period?: report_felony
+    datatype: yesnoradio
+  - What type of crime was it?: report_felony_details
+    show if: report_felony
+  - Did the beneficiary keep living alone, with the same person, or in the same institution?: same_living_arrangement
+    datatype: yesnoradio
+  - Describe the change and give the beneficiary's current address: living_change_details
+    hide if: same_living_arrangement
+continue button field: full_events_reviewed
+---
+id: regular benefits
+section: regular
+question: |
+  How did you use ${client.possessive('regular benefits')}?
+subquestion: |
+  Use the total accountable benefit amount in question 3 of the SSA form. Leave out money in the dedicated account.
+fields:
+  - Total accountable benefit amount printed in question 3: regular_accountable
+    datatype: currency
+    min: 0
+  - Did you decide how the benefits were spent or saved?: regular_payee_decided
+    datatype: yesnoradio
+  - Who decided and how?: regular_decider
+    hide if: regular_payee_decided
+  - Amount spent on food and housing: regular_food
+    datatype: currency
+    min: 0
+  - Amount spent on other items: regular_other
+    datatype: currency
+    min: 0
+  - Amount saved at the end of the report period: regular_saved
+    datatype: currency
+    min: 0
+  - Did the beneficiary live in a care facility and receive less than $360 in spending for personal needs during the year?: explain_personal_needs
+    datatype: yesnoradio
+  - Explain how the beneficiary's personal needs were met: regular_personal_needs
+    show if: explain_personal_needs
+validation code: |
+  accounted_for = sum(Decimal(str(value)) for value in (regular_food, regular_other, regular_saved))
+  if accounted_for != Decimal(str(regular_accountable)):
+    validation_error("Food and housing, other spending, and savings must add up to the total in question 3. Check these amounts against your records.")
+continue button field: full_spending_reviewed
+---
+id: savings
+section: regular
+question: |
+  How were the regular benefits saved?
+fields:
+  - Select every type of account used: regular_accounts
+    datatype: checkboxes
+    none of the above: False
+    minlength: 1
+    choices:
+      - Savings or checking account: savings
+      - U.S. savings bonds: bonds
+      - Certificates of deposit: certificates
+      - Collective savings or checking account: collective
+      - Other: other
+  - Describe the other account or investment: regular_other_account
+    show if: regular_accounts['other']
+  - Select every way the accounts were titled: regular_titles
+    datatype: checkboxes
+    none of the above: False
+    minlength: 1
+    choices:
+      - Beneficiary's name by your name: beneficiary
+      - Your name for beneficiary's name: payee
+      - Other: other
+  - Give the other account title: regular_other_title
+    show if: regular_titles['other']
+continue button field: full_savings_reviewed
+---
+id: account activity
+section: dedicated
+question: |
+  What happened in the dedicated account?
+subquestion: |
+  Use the period from ${date_from} through ${date_to}. Box 6 on the form from SSA already includes past-due benefits SSA deposited.
+fields:
+  - Total dedicated account amount printed in box 6: report_dedicated_account_total_balance
+    datatype: currency
+    min: 0
+  - Did you make any deposits during this period, apart from the SSA deposits already included in box 6?: dedicated_account_deposits.there_are_any
+    datatype: yesnoradio
+  - Did you take any money out during this period?: dedicated_account.there_are_any
+    datatype: yesnoradio
 ---
 id: deposits
-section: spending
+section: dedicated
 question: |
-  List each **deposit** you made
-  into the dedicated account since your last report to SSA
-list collect: True  
+  List each deposit you made
+  during the report period
+subquestion: |
+  Leave out the SSA deposits already counted in box 6.
+list collect: True
 fields:
   - Date of deposit: dedicated_account_deposits[i].date
     datatype: date
+    min: ${date_from}
+    max: ${date_to}
   - Amount: dedicated_account_deposits[i].value
     datatype: currency
+    min: 0.01
   - Description: dedicated_account_deposits[i].description
 ---
 id: withdrawals
-section: spending
+section: dedicated
 question: |
   List each **purchase** you made using money from the dedicated
-  account since your last report to SSA
+  account during the report period
 subquestion: |
   You must explain how each purchase relates to the child's disability or
-  education. 
-  
-  Click to learn more about the [rules for what relates to a child's disability or education](https://secure.ssa.gov/apps10/poms.nsf/lnx/0200602140). 
-  
-  You can also look at page 6 of the [Saving and Spending workbook](http://www.gbls.org/sites/default/files/cdp_spending_kit_full.pdf)
-  for examples of purchases that may be allowed. 
-list collect: True  
+  education.
+
+  Click to learn more about the [rules for what relates to a child's disability or education](https://secure.ssa.gov/apps10/poms.nsf/lnx/0200602140).
+
+list collect: True
 fields:
   - Date of purchase: dedicated_account[i].date
     datatype: date
+    min: ${date_from}
+    max: ${date_to}
   - Amount: dedicated_account[i].value
     datatype: currency
+    min: 0.01
   - What did you buy?: dedicated_account[i].description
     datatype: area
     rows: 2
@@ -273,6 +301,7 @@ fields:
       - Education: education
       - Job skills: job skills training
       - Something else: other
+    minlength: 1
     none of the above: false
   - note: |
       **You need to explain this purchase to Social Security**.
@@ -281,23 +310,16 @@ fields:
   - label: |
       Explain why you bought the item and how it's related to your child's disability or education.
     label above field: True
-    field: dedicated_account[i].detailed_purpose      
+    field: dedicated_account[i].detailed_purpose
     datatype: area
     rows: 2
 ---
 reconsider: True
-comment: |
-  Make sure all of the withdrawals were used for a valid purpose
 code: |
-  temp_used_for_valid_purpose = True
-  for entry in dedicated_account:
-    # 
-    if entry.purpose.true_values().isdisjoint(['medical treatment','education','job skills training']):
-      temp_used_for_valid_purpose = False
-      continue
-  used_for_valid_purpose = temp_used_for_valid_purpose
+  used_for_valid_purpose = all(not entry.purpose['other'] for entry in dedicated_account)
 ---
 id: benefit
+section: dedicated
 question: |
   How did the money benefit ${client}?
 subquestion: |
@@ -306,7 +328,7 @@ subquestion: |
 fields:
   - How did your spending benefit ${client} and how were they related to ${client}'s disability?: how_spending_benefited_client
     maxlength: 405
-    datatype: area  
+    datatype: area
 ---
 id: receipts
 section: receipts
@@ -315,9 +337,10 @@ question: |
   Do you have any receipts?
 subquestion: |
   Look at the list of purchases below. Check the box if you have a receipt you'd
-  like to upload for that purchase.
+  like to keep with your personal worksheet. Keep the original receipts.
 fields:
   - no label: receipt_list
+    required: False
     datatype: object_checkboxes
     choices: dedicated_account
     object labeler: |
@@ -328,247 +351,8 @@ code: |
     rec.receipt
   gather_receipts = True
 ---
-id: rep payee name
-section: rep_info
-question: |
-  What is your name?
-fields:  
-  - First name: rep_payee.name.first
-  - Middle name: rep_payee.name.middle
-    required: False
-  - Last name: rep_payee.name.last
----
-id: recipient name
-section: recipient_info
-question: |
-  Who is getting the Social Security Benefits?
-subquestion: |
-  List the name of the person who you are the rep payee
-  for.
-fields:
-  - First name: client.name.first
-  - Middle name: client.name.middle
-    required: False
-  - Last name: client.name.last
-  #- Social Security Number: client.ssn
-  #  datatype: ssn
-  #  validate: is_valid_ssn
----
-id: client_info
-section: client_info
-question: |
-  What is the client's address?
-fields:
-  - Address: client.address.address
-    address autocomplete: True
-  - City: client.address.city
-  - State: client.address.state
-  - Zip: client.address.zip
----
-id: time period
-section: events
-question: |
-  What time does this report cover?
-subquestion: |  
-  Look at the letter you got from Social Security to find the period of the report.
-  If you don't have the letter, call Social Security at 1-800-772-1213.
-fields:
-  - Report begins: date_from
-    datatype: date
-  - Report ends: date_to
-    datatype: date
----
-id: events
-section: events
-question: |
-  Did any of the following happen between ${date_from} and ${date_to}?
-subquestion: |
-  Check any of the boxes below that are true
-fields:
-  - I was convicted of (or plead guilty) to a felony: had_felony
-    datatype: yesno
-  - Explain what type of crime it was: had_felony_explanation
-    maxlength: 330
-    datatype: area
-    show if: had_felony
-  - ${client} moved or is living with someone else.: client_moved
-    datatype: yesno
-  - Explain the reason for the change. [BR] [BR] Provide ${client.possessive('new address')} if they moved: client_moved_explanation
-    maxlength: 410
-    datatype: area
-    rows: 6
-    show if: client_moved
-  - None of the above: dummy_none_of_above
-    datatype: yesno
-    uncheck others: True
----
-code: |
-  client_moved_explanation_and_address = client_moved_explanation + "\r\n" + client.address.full()
----
-id: benefits paid and saved
-section: spending
-question: |
-  Accountable benefits amount
-subquestion: |
-  Look in box 3.
-fields:
-  - Benefits paid to you between ${date_from} and ${date_to}: benefits_paid
-    datatype: currency
-  - Benefits reported saved from prior years: benefits_saved
-    datatype: currency
----
-code: |
-  benefits_total = benefits_saved + benefits_paid
----
-section: spending
-id: how decided spent
-question: |  
-  Who decided how the benefits amount was spent?
-fields:
-  - no label: who_decided_how_spent
-    default: "me"
-    input type: radio
-    choices:
-      - I decided on behalf of ${client}: me
-      - ${client} decided
-      - Someone else      
-  - Please explain why you did not decide how the money was spent: who_decided_explanation
-    datatype: area
-    hide if:
-      variable: who_decided_how_spent
-      is: "me"
----
-code: |
-  payee_chose_spending = who_decided_how_spent == 'me'
----
-section: recipient_info
-id: lives in institution
-question: |
-  Does ${client} live in an institution or care facility?
-fields:
-  - no label: client_in_institution
-    datatype: yesnoradio
----
-section: spending
-id: low expenditures explanation
-question: |
-  You spend less than $360 in the last year.
-subquestion: |
-  Please explain how ${client.possessive('needs')} were met
-  in the last year.
-fields:
-  - no label: how_met_needs_explanation
-    datatype: area
----
-section: spending_info
-id: type of account saved in
-question: |
-  What kind of accounts have you used to save
-  the benefits?
-fields:
-  - "What kind of accounts have you used to save the benefits?": account_types
-    datatype: checkboxes
-    choices:
-      - Savings account: savings
-      - Checking account: checking
-      - Savings bonds: savings bonds
-      - Certificates of Deposit: cd
-      - Collective savings/checkings account: collective
-      - Other: other
-  - Explain: account_types_other
-    show if:
-      variable: account_types
-      is: 'other'
-  - Whose name is on the account(s)?: account_owners
-    datatype: checkboxes
-    choices:
-      - ${client} by ${rep_payee}: beneficiary by rep
-      - ${rep_payee} for ${client}: rep for beneficiary
-      - Other: other
-  - How is the account titled?: account_owners_other
-    show if:
-      variable: account_owners
-      is: "other"
----
-id: starting balances
-section: spending
-question: |
-  Dedicated Account
-subquestion: |
-  This form is to help you report to the Social Security Administration how you spent
-  money on ${client.possessive('behalf')} over the last year.
-  
-  Start by telling us how much money was in the account as of your last report to SSA.
-  You can copy this off of the form that the Social Security Administration sent you.
-  
-  Take a look at the amounts written in box 6 for this question.
-
-  [CENTER]
-  [FILE box_6.png, None, The amounts on the form are to the right side of the page in box 6, which starts with Past-due SSI benefits depositied by SSA in dedicated account]
-fields:
-  - Past due SSI benefits deposited by SSA in dedicated account: report_dedicated_account_deposits
-    datatype: currency
-  - Balance in dedicated account as you reported on a prior report: report_dedicated_account_prior_report_balance
-    datatype: currency
-  - Total dedicated account balance: report_dedicated_account_total_balance
-    datatype: currency
-  - Did anyone deposit any money into the account between ${ format_date(date_from, format='MM/dd/yyyy') } and ${ format_date(date_to, format='MM/dd/yyyy') } ?: dedicated_account_deposits.there_are_any
-    datatype: yesnoradio
-  - Did anyone take any money out of the dedicated account between ${ format_date(date_from, format='MM/dd/yyyy') } and ${ format_date(date_to, format='MM/dd/yyyy') } ?: dedicated_account.there_are_any
-    datatype: yesnoradio
----
-id: relationship to recipient
-section: rep_info
-question: |
-  Information about your relationship with ${client}
-fields:
-  - How are you related to ${client}: rep_payee.relationship
-    input type: radio
-    choices:
-      - Parent
-      - Grandparent
-      - Sibling of ${client.possessive('Parent')}
-      - Sibling of ${client}
-      - Cousin
-      - Friend
-      - Representative payee (from an agency or company): Employee of an agency
-      - Other: other
-  - What is your title?: rep_payee.title
-    show if:
-      variable: rep_payee.relationship
-      is: "Employee of an agency"
-  - How are you related?: rep_payee.title
-    show if:
-      variable: rep_payee.relationship
-      is: "other"
----
-id: regular spending
-section: spending
-question: |
-  Money spent between ${date_from} and ${date_to} from ${client.possessive('regular monthly benefits')}.
-subquestion: |
-  The questions below are about money you spent between ${date_from} and ${date_to}.
-  Think only about money spent from ${client.possessive('regular benefits')}. Later 
-  we'll ask you about any money spent from a dedicated account.
-fields: 
-  - Do you want to enter information about the money that you spent one item at a time and let us add it up, or just enter the total amount spent?: benefits_spending_entry_type
-    input type: radio
-    choices:
-      - Help me with the math. I'll enter my spending one item at a time.: separately
-      - I'll do my own math. Let me just enter the spending total.: totals
-  - How much did you spend on food and housing from ${client.possessive('regular monthly benefits')} between ${date_from} and ${date_to}?: benefits_spent_on_housing
-    datatype: currency
-    show if:
-      variable: benefits_spending_entry_type
-      is: "totals"
-  - How much did you spend on other items from ${client.possessive('regular monthly benefits')} between ${date_from} and ${date_to}?: benefits_spent_on_housing
-    datatype: currency
-    show if:
-      variable: benefits_spending_entry_type
-      is: "totals"      
----
 id: receipt
-section: receipt_entry
+section: receipts
 question: |
   Purchase of ${currency(dedicated_account[i].amount())} on ${dedicated_account[i].date}
 subquestion: |
@@ -577,7 +361,7 @@ subquestion: |
 fields:
   - Upload a receipt: dedicated_account[i].receipt
     datatype: camera
-    maximum image size: 350
+    maximum image size: 1800
 ---
 table: dedicated_account.table
 rows: dedicated_account
@@ -611,14 +395,14 @@ code: |
 ---
 need: calculated_ledger
 id: review account
+section: dedicated
 field: review_account
-section: spending
 question: |
   Review your dedicated account entries
 subquestion: |
   So far, it looks like you deposited ${currency(dedicated_account_deposits.total())}
   since your last report to SSA and withdrew ${currency(dedicated_account.total())},
-  which means the current balance should be **${currency(Decimal(report_dedicated_account_total_balance) + Decimal(dedicated_account_deposits.total()) - Decimal(dedicated_account.total()) )}**
+  which means the balance before interest or other adjustments is **${currency(Decimal(str(report_dedicated_account_total_balance)) + Decimal(dedicated_account_deposits.total()) - Decimal(dedicated_account.total()) )}**
 
   If that doesn't look right, make any changes needed below.
 
@@ -632,128 +416,36 @@ subquestion: |
 
 
 ---
+id: statement balance
+section: dedicated
+question: |
+  What was the actual balance at the end of the report period?
+subquestion: |
+  Use your bank records for ${date_to}. Include interest earned through that date. Enter zero if the account was empty.
+fields:
+  - Ending balance for question 8: reported_ending_balance
+    datatype: currency
+    min: 0
+---
 id: download
-need: calculated_ledger
-section: download_report
+section: download
 event: pdf_report
 question: |
-  Your download is ready
-  
+  Your dedicated account worksheet is ready
 subquestion: |
-  1. Download and print two copies of both forms below.
-  1. Save one copy for your records.
-  1. Deliver the second copy to Social Security.
+  Copy your answers to ${"questions 6 through 8" if annual_scope == "yes" else "the full report"} on the form SSA mailed you. Use whole dollars on that form.
+  Sign and date the SSA form. Return it in the envelope SSA provided by the deadline in your notice.
+  Keep your worksheet, bank records, and receipts for two years. Send supporting records only if SSA asks for them.
 
-  ### Main form
-  ${ssa_6233}
+  [Download your worksheet (PDF)](${ssa_6233_appendix.pdf.url_for()})
 
-  ### Addendum with detailed records
-  ${pdf_concatenate(ssa_6233_appendix)}
-attachment code: |
-  [ ssa_6233, ssa_6233_appendix ]
----
-attachment: 
-  - variable name: ssa_6233_appendix
-    filename: ssa_6233_appendix
-    docx template file: dedicated_account_appendix.docx
+  [Download an editable copy (Word)](${ssa_6233_appendix.docx.url_for()})
 ---
 attachment:
-  - variable name: ssa_6233
-    filename: ssa_6233
-    pdf template file: SSA-6233-dedicated_account_record.pdf
-    skip undefined: True
-    fields:
-      - "DateFrom": ${ format_date(date_from, format='MM/dd/yyyy') }
-      - "DateTo": ${ format_date(date_to, format='MM/dd/yyyy') }
-      #- "Ssn": ${client.ssn}
-      - "PayeeNameAndAddress": ${rep_payee.address_block()}
-      - "Name": ${client}
-      - "HadFelonyYes": ${had_felony}
-      - "HadFelonyNo": ${not had_felony}
-      - "HadFelonyExplanation": ${had_felony_explanation if had_felony else ''}
-      - "ClientMovedNo": ${not client_moved}
-      - "ClientMovedYes": ${client_moved}
-      - "ClientMovedExplanation": ${client_moved_explanation if client_moved else '' }
-      #- "BenefitsPaid": ${
-      #- "BenefitsPriorYears": something
-      # - "TotalAccountableAmount": something
-      #- "PayeeChoseSpendingYes": ${payee_chose_spending}
-      #- "PayeeChoseSpendingNo": ${not payee_chose_spending}
-      #- "WhoDecidedExplanation": ${who_decided_explanation if who_decided_how_spent != 'me' else ''}
-      #- "AmountSpentFoodHousing": something
-      #- "AmountSpentOther": something
-      # - "HowMetNeedsExplanation": ${how_met_needs_explanation}
-      #- "AmountSaved": something
-      #- "AccountTypeSavings": ${account_types['savings']}
-      #- "AccountTypeBond": ${account_types['savings bonds']}
-      #- "AccountTypeCd": ${account_types['cd']}
-      #- "AccountTypeCollectiveSavings": ${account_types['collective']}
-      #- "AccountTypeOther": ${account_types['other']}
-      #- "TitleBeneficiaryBy": ${account_owners['beneficiary by rep']}
-      #- "TitlePayeeFor": ${account_owners['rep for beneficiary']}
-      #- "TitleOther": ${account_owners['other']}
-      #- "AccountTypesOther": ${account_types['other']}
-      #- "AccountTypesOtherTitle": something
-      - "DedicatedAccountDeposits": ${currency(report_dedicated_account_deposits)}
-      - "DedicatedAccountPriorReportBalance": ${currency(report_dedicated_account_prior_report_balance)}
-      - "DedicatedAccountTotalBalance": ${currency(report_dedicated_account_total_balance)}
-      - "DepositedIntoDedicatedAccountNo": ${not dedicated_account_deposits.there_are_any}
-      - "DepositedIntoDedicatedAccountYes": ${dedicated_account_deposits.there_are_any}
-      - "DaDepositsDetails": See addendum
-      - "WithdrewMoneyFromDedicatedAccountYes": ${dedicated_account.there_are_any}
-      - "WithdrewMoneyFromDedicatedAccountNo": ${not dedicated_account.there_are_any}
-      - "DaWithdrawalsDetails": See addendum
-      - "DaUsedForMedicalEducationOrTrainingYes": ${used_for_valid_purpose}
-      - "DaUsedForMedicalEducationOrTrainingNo": ${not used_for_valid_purpose}
-      - "DaWithdrawalsHowUsed": ${'' if used_for_valid_purpose else how_spending_benefited_client}
-      - "DedicatedAccountBalance": ${ currency(Decimal(report_dedicated_account_total_balance) + Decimal(dedicated_account_deposits.total()) - Decimal(dedicated_account.total()) ) }
-      - "RepPayeeSignature": ${ rep_payee.signature }
-      - "SignatureDate": ${today()}
-      - "PhoneNumber": ${rep_payee.phone_number}
-      - "RepPayeeRelationship": |
-          % if rep_payee.relationship == 'other':
-          ${rep_payee.title}
-          % elif rep_payee.relationship == 'Employee of an agency':
-          ${rep_payee.title}
-          % else: 
-          ${rep_payee.relationship} 
-          % endif
----
-# For debugging
-# event: final_report
-# question: |
-#   Results
-# subquestion: |
-#   ### Report period ${date_from} to ${date_to}
-# 
-#   Beneficiary: ${client}
-# 
-#   Were you convicted of a crime?
-#   ${had_felony}
-#   % if had_felony:
-#   ${had_felony_explanation}
-#   % endif
-# 
-#   Beneficiary still living in the same place?
-#   ${not client_moved}
-# 
-#   Benefits paid
-# 
-#   * During the report period: {currency(benefits_paid)}
-#   * Saved from prior years: {currency(benefits_saved)}
-# 
-#   Who decided how spent: ${who_decided_how_spent}
-#   % if not who_decided_how_spent == 'me':
-#   ${who_decided_explanation}
-#   % endif
-# 
-#   Type of account: ${account_types.true_values()}
-# 
-#   Account owners: ${account_owners}
-# 
-#   Past due SSI benefits
-# 
-#   * Deposits ${currency(dedicated_account_deposits)}
-#   * Current balance ${currency(dedicated_account_current_balance)}
-# 
-#   ${rep_payee.address_block()}
+  variable name: ssa_6233_appendix
+  name: Dedicated account worksheet
+  filename: dedicated_account_worksheet
+  docx template file: dedicated_account_appendix.docx
+  valid formats:
+    - pdf
+    - docx
