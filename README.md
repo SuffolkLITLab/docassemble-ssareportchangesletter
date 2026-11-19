@@ -1,6 +1,28 @@
-# docassemble.ssareportchangesletter
+# Social Security reporting interviews
 
-An interview to help an SSI or SSDI recipient report changes to the Social Security Administration
+This docassemble package includes two public interviews.
+
+- [Report changes to Social Security](https://courtformsonline.org/ma/forms/report-changes-to-social-security) helps people who receive SSI or SSDI prepare a statement about changes in their circumstances.
+- [Report of benefits and dedicated account](https://courtformsonline.org/ma/forms/report-of-benefits-and-dedicated-account) helps representative payees prepare answers about a beneficiary’s dedicated account using the report that Social Security mailed them.
+
+On a docassemble server with this package installed, use these interview paths.
+
+- `/interview?i=docassemble.ssareportchangesletter:ssa_report_change.yml`
+- `/interview?i=docassemble.ssareportchangesletter:ssa_report_of_dedicated_account.yml`
+
+The separate `ssa_dedicated_account_ledger.yml` interview tracks transactions throughout the year. The `ssa_office_test.yml` interview links to the official SSA office locator.
+
+## Run the browser regression tests
+
+Install this package on a local docassemble server. With Node.js, Chromium for Playwright, and Poppler installed, run the tests from this checkout.
+
+```sh
+npm install --no-save --package-lock=false playwright
+npx playwright install chromium
+node --test tests/*.test.cjs
+```
+
+The tests default to `http://localhost`. Set `DOCASSEMBLE_URL` to use a different test server.
 
 ## Author
 

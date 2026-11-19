@@ -1,13 +1,11 @@
 include:
-  - docassemble.VLPBranding:vlp_branding.yml
-  - docassemble.ssa:ssa.yml
+  - vlp_branding.yml
 ---
 modules:
   - docassemble.base.util
-  - .ssa
+  - docassemble.AssemblyLine.al_document
   - docassemble.ALToolbox.misc
   - docassemble.income.income
-  - docassemble.GithubFeedbackForm.github_issue
 ---
 metadata:
   title: |
@@ -15,43 +13,17 @@ metadata:
   short title: |
     SSA Report Changes
   description: |
-    If you get SSI or SSDI (or both), you are required to tell Social Security about changes in your life by the 10th day of the month after the change happened. Failure to do so could result in an overpayment. If this change occurred in the past, you may wish to speak with a legal representative. 
-
-    This tool helps you report changes to Social Security, including:
-
-    * Update to personal information including phone number, address 
-    * Change in living arrangements
-    * Leaving the United States for more than 30 days in a row
-    * Receipt of arrrest warrant. 
-    * Changes to your employment status, if you start or stop work, or if there is a change in pay or hours worked
-    * Changes to your resources including account balances or any money received
-    * Change in marital status
-    * School attendence if under age 22
-    * Change in citizenship or lawful noncitizen status 
-    
-    If you are a person with a disability, you must also report 
-    * Improvement in medical condition
-    * Any change in your Ticket to Work status 
-    * Any change in your work or Plan to Achieve Self-Support (PASS) expenses
-    
-
-
-    Report these changes promptly and no later than the tenth day of the month after they happen to       get an accurate payment of benefits.
+    Prepare a Statement of Claimant or Other Person (SSA-795) to report a change to Social Security. People who receive SSI, SSDI, or both can use this interview. If you get SSI, report changes promptly and no later than the tenth day of the month after they happen. If you get SSDI, tell Social Security right away about changes in your work or income or a big improvement in your medical condition.
   can_I_use_this_form: |
-    You can use this form if you are on SSI or SSDI and need to report changes to Social Security.
+    Use this interview to prepare your own statement. You can describe changes in work, income, health, resources or living arrangements.
   before_you_start: |
-    Before you start, you need to know: 
-    1. Are you on SSI (Supplemental Security Income), SSDI (Social Security Disability), or both?
-    2. If you are working and getting paid, you need the name and address of the place you work, the      number of hours you work, and how much you are paid. Your pay stubs should have all this              information on them, so having them with you from the start will be helpful. 
-    3. If you are answering questions for someone else, you need their full name, address, and Social     Security number.
-
-    Make sure you have specific information, like dates and addresses, before you start. This will        help you complete the form more quickly.
+    Have your address, the dates of your changes and any pay stubs handy. You can add your Social Security number to the completed statement after printing it.
   maturity: production
   estimated_completion_minutes: 15
   estimated_completion_delta: 15
   languages:
     - en
-  jurisdiction: NAM-US-US
+  jurisdiction: NAM-US
   help_page_url: https://www.ssa.gov/ssi/reporting/changes
   help_page_title: Report changes to your situation
   LIST_topics:
@@ -60,42 +32,21 @@ metadata:
     - BE-01-03-00-00
   authors:
     - name: Quinten Steenhuis
-      organization: Volunteer Lawyer's Project of the Boston Bar Association
-  revision_date: 2025-07-21
+      organization: Volunteer Lawyers Project of the Boston Bar Association
+  revision_date: 2026-11-19
   update_notes: |
-    2024 - updated metadata 
+    Updated reporting guidance, preview, filing instructions and continuation pages.
 ---
 features:
   javascript: 
-    - ssa.js
     - phone.js 
   question back button: True    
----
-imports:
-  - jinja2.utils
----
-default screen parts:
-  under: |
-    % if not user_logged_in():
-    [:sign-in-alt: Sign-in](${url_of('login', next=interview_url())}) or [register](${url_of('register', next=interview_url())}) to save your progress (optional).
-    % endif
-    [:comment-dots: Feedback](${ feedback_link(user_info(), github_repo="docassemble-ssareportchangesletter", github_user="nonprofittechy") })    
-  pre: |
-    % if get_config('debug'):
-    `id: ${ user_info().question_id }`
-    % endif
 ---
 objects:
   - client: Individual
   - ssa_office: Person
   - jobs: JobList.using(complete_attribute='employer_type') # Job
-  - officelist: FieldOfficeList
   - change_details: DADict.using(auto_gather=False, object_type=DAObject, gathered=True)
----
-comment: |
-  Test URL for SSA offices:
-  
-  https://services6.arcgis.com/zFiipv75rloRP5N4/ArcGIS/rest/services/Office_Points/FeatureServer/1/query?where=&objectIds=&time=&geometry=-96.915919%2C32.693022&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&resultType=none&distance=10&units=esriSRUnit_StatuteMile&returnGeodetic=false&outFields=*&returnGeometry=true&multipatchOption=xyFootprint&maxAllowableOffset=&geometryPrecision=&outSR=4326&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnDistinctValues=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=none&f=pgeojson&token=
 ---
 id: order
 mandatory: True
@@ -105,7 +56,6 @@ code: |
   client.name.first
   client.phone_number
   
-  # client.ssn
   benefits_type
   set_changes
   if working or working_for_self:
@@ -155,6 +105,7 @@ code: |
         
   changes_details
   ssa_office.address.address
+  statement_text
   preview_your_form
   client.signature
   store_variables_snapshot(data={'zip':client.address.zip,
@@ -171,52 +122,6 @@ code: |
   if benefits_type == 'ssdi':
     changes = DAEmpty()
   set_changes = True
----
-id: which office
-question: |
-  What Social Security office do you want to send the letter to?
-subquestion: |
-  % if found_offices:
-  We have found the following offices that are close to your address.
-  
-  ${map_of([office for office in officelist])}
-
-  If there is more than one result, you should choose the office that serves your city
-  or town.
-  Use the [Office locator](https://secure.ssa.gov/ICON/main.jsp) to find the
-  SSA office that serves your city.
-  % else:
-  You can use the [Office locator](https://secure.ssa.gov/ICON/main.jsp) to find
-  the Social Security Office that serves your city or town.
-  % endif
-fields:
-  - Social Security Office: ssa_office
-    datatype: object_radio
-    # input type: radio
-    choices: officelist
-    none of the above: True
-    disable others: True
-    object labeler: |
-      lambda y: (y.address.on_one_line(show_country=False))
-  - note: |
-      Choose an office above, or use the [Office locator](https://secure.ssa.gov/ICON/main.jsp)
-    show if:
-      code: |
-        found_offices
-  - Address: ssa_office.address.address
-  - Suite: ssa_office.address.unit
-    required: False
-  - City: ssa_office.address.city
-  - State: ssa_office.address.state
-    code: |
-      states_list()
----
-code: |
-  officelist.load_offices(client.address)
-  officelist.gathered = True
----
-code: |
-  found_offices = officelist.number() > 0
 ---
 code: |
   letter_date = today()
@@ -235,14 +140,7 @@ interview help:
     This free interview was created by the Volunteer Lawyer's Project of the
     Boston Bar Foundation, a non-profit legal aid agency in Boston, Massachusetts.
   
-    All information sent to and from this server is encrypted
-    using military-grade security standards.
-    If you create an account on our system, your responses
-    will be encrypted on our server at all times.
-    Only someone with your password will be able to view the contents of your
-    interview. It's important to both keep your password
-    secure and not to lose it, because we will not be able
-    to retrieve your interview without it.
+    You can use this interview without an account. Sign in if you want to save your progress.
 ---
 code: |
   jobs[i].is_hourly
@@ -253,44 +151,11 @@ field: intro_screen
 question: |
   We're here to help.
 subquestion: |
-  This is a tool for people on SSI or SSDI disability benefits. It helps notify the Social Security Administration (Social Security) or document [important changes](https://blog.ssa.gov/reporting-changes-is-your-responsibility/) to avoid potential over or under payment of benefits.
-  You may report some changes [directly to the SSA at this link](https://www.usa.gov/social-security-disability).
+  Prepare a statement to report a change to Social Security. When you finish, you will download your statement and send it to Social Security yourself.
 
-  You are required to tell Social Security about changes in your life by the 10th day of the month after the change happened. Failure to do so could result in incorrect payments.
+  If you get SSI, report changes promptly and no later than the tenth day of the month after they happen. If you get SSDI, tell Social Security right away about changes in your work or income or a big improvement in your medical condition. See Social Security’s [SSI reporting guide](https://www.ssa.gov/ssi/text-report-ussi.htm) and [disability reporting guide](https://www.ssa.gov/disability/reporting).
 
-  You also can report changes to Social Security by calling +1 800-772-1213 or calling TTY +1 800-325-0778 Monday to Friday in English and other languages. 
-
-  Before you start, you need to know if you are on:
-  
-  * SSI (Supplemental Security Income) or
-  * SSDI (Social Security Disability) or
-  * SSI and SSDI.
-    
-  For how to determine if you are on SSI, SSDI, or both, [visit the SSA's website](https://www.usa.gov/social-security-disability).
-  
-  If you are working and getting paid, you also need:
-  
-  * the name and address of the place you work, 
-  * the number of hours you work, and
-  * how much you are paid.
-  
-  Your pay stubs should have all this information on them, so having them with you 
-  from the start will be helpful.
-  
-  If you are answering questions for someone else, you need their:
-  full name, 
-  address, and 
-  Social Security number.
-  
-  If you are working and getting paid, you also need:
-  
-  1. Name and Address of the place you work, 
-  2. Number of hours you work
-  3. How much you are paid
-  
-  Your pay stubs should have this information on them, so having them with you 
-  from the start will be helpful.
-  
+  You will need your benefit type (SSI, SSDI, or both), address and dates of the changes. If you started working, have the employer’s name, hours and pay ready. Add your Social Security number after you print the statement.
 fields: 
   - To continue you must accept the [terms of use](https://vlpnet.org/tos-for-guided-interviews/): intro_screen
     datatype: checkboxes
@@ -336,33 +201,13 @@ fields:
     required: False
   - Last name: client.name.last
 ---
-id: "which office 2"
+id: which office
 question: |
   What Social Security office do you want to send the letter to?
 subquestion: |
-  % if found_offices:
-  We have found the following offices that are close to your address.
-  
-  ${map_of([office for office in officelist])}
-  % else:
-  You can use the [Office locator](https://secure.ssa.gov/ICON/main.jsp) to find
-  a Social Security Office near you.
-  % endif
+  Find the [mailing address for your Social Security office](https://www.ssa.gov/locator/).
+  Enter it here to include it in your mailing instructions.
 fields:
-  - Social Security Office: ssa_office
-    datatype: object_radio
-    # input type: radio
-    choices: officelist
-    none of the above: True
-    disable others: True
-    object labeler: |
-      lambda y: (y.address.on_one_line())
-  - note: |
-      Choose an office above, or use the [Office locator](https://secure.ssa.gov/ICON/main.jsp)
-    show if:
-      code: |
-        found_offices
-  # - Office name: ssa_office.name.text
   - Address: ssa_office.address.address
   - Suite: ssa_office.address.unit
     required: False
@@ -371,7 +216,6 @@ fields:
     code: |
       states_list()
   - Zip: ssa_office.address.zip
-    required: False
 ---
 features:
   question help button: False
@@ -381,7 +225,7 @@ id: benefits type
 question: |
   What kind of Social Security benefits are you receiving?
 help: | 
-  If you are unsure whether you receive SSI, SSDI, or both you can call Social Security at 1-855-807-8807 or check the [Social Security website](https://www.ssa.gov/myaccount/)
+  If you are unsure whether you receive SSI, SSDI, or both you can call Social Security at 1-800-772-1213 or check the [Social Security website](https://www.ssa.gov/myaccount/)
 fields: 
   - no label: benefits_type_checkboxes
     datatype: checkboxes
@@ -402,8 +246,7 @@ question: |
   What kind of change do you have to report?
 subquestion: |
   Select anything that has changed.
-  Include work for Uber, Lyft, or work for yourself such as odd jobs, any sources of   
-  additional money, or a change in living situation. 
+  Include paid work, such as driving for Uber or Lyft or doing odd jobs. Choose "Something else" to report stopping work, changes in pay or hours, or another change. Include the date and what changed. If you get SSDI, you can also use "Something else" to describe an improvement in your medical condition.
 fields:
   - I started working for an employer: working
     datatype: yesnowide
@@ -417,10 +260,10 @@ fields:
     choices:
       - I moved
       - I was in jail or prison
-      - I received an arrest warrant
+      - I have an outstanding warrant for escape from custody, flight to avoid prosecution or confinement, or flight-escape: I received an arrest warrant
       - I was in the hospital
       - I was in a nursing home
-      - I was outside of the United States for more than 30 days in a row
+      - I was outside the United States: I was outside of the United States for more than 30 days in a row
       - I had a change in resources 
       - My bank account or account balance changed
       - I received assistance to pay for rent or food
@@ -498,7 +341,7 @@ fields:
   - Total (gross) pay each pay period: jobs[i].value
     datatype: currency
     hide if: jobs[i].is_hourly
-  - What deductible expenses do you have for this job?: jobs[i].deductions
+  - How much do you spend on deductible business expenses each month?: jobs[i].deductions
     datatype: currency
     show if:
       variable: jobs[i].employer_type
@@ -539,10 +382,15 @@ fields:
     datatype: date
   - Date left jail : jail_end 
     datatype: date
+validation code: |
+  if jail_end < jail_start:
+    validation_error("The end date must be on or after the start date.", field="jail_end")
 ---
 id: other change
 question: |
-  What was the date when ${ i.replace('I ','you ').replace('myself','yourself') }?
+  When did this change happen?
+subquestion: |
+  ${ 'An outstanding warrant for escape or flight' if i == 'I received an arrest warrant' else i }
 fields:  
   - Date: change_details[i].date
     datatype: date
@@ -560,6 +408,9 @@ fields:
     datatype: date
   - Date left hospital : hospital_end 
     datatype: date
+validation code: |
+  if hospital_end < hospital_start:
+    validation_error("The end date must be on or after the start date.", field="hospital_end")
 ---
 code: |
   hospital_range = True
@@ -568,12 +419,15 @@ code: |
 id: nursing home 
 continue button field: yes_nursing 
 question: | 
-  When were in the nursing home? 
+  When were you in the nursing home?
 fields:
   - Date entered : nursing_start
     datatype: date
   - Date left nursing home : nursing_end 
     datatype: date
+validation code: |
+  if nursing_end < nursing_start:
+    validation_error("The end date must be on or after the start date.", field="nursing_end")
 ---
 code: |
   nursing_range = True
@@ -582,12 +436,17 @@ code: |
 id: outside US
 continue button field: yes_expat
 question: | 
-  When were you outside of the United States for more than 30 days in a row?
+  When were you outside of the United States?
+subquestion: |
+  Social Security asks SSI recipients to report being outside the United States for a full calendar month or at least 30 days in a row.
 fields:
-  - Date entered : expat_start
+  - Date you left the United States: expat_start
     datatype: date
-  - Date left foreign country : expat_end
+  - Date you returned to the United States: expat_end
     datatype: date
+validation code: |
+  if expat_end < expat_start:
+    validation_error("The end date must be on or after the start date.", field="expat_end")
 ---
 code: |
   expat_range = True
@@ -649,24 +508,24 @@ fields:
 ---
 code: |
   changes_temp = []
-  if working or working_for_self or 'I received assistance to pay for rent or food' in changes:
+  if working or working_for_self or (benefits_type == 'ssi' and changes['I received assistance to pay for rent or food']):
     changes_temp.append('income')
   if benefits_type == 'ssi':
     if not set(changes.true_values()).isdisjoint({
       'I moved', 
-      'I was in jail'
+      'I was in jail or prison',
       'I was in the hospital',
       'I was in a nursing home',
       'I was outside of the United States for more than 30 days in a row',
       'The number of people in my household changed',
-      'My immigration status changed'
+      'My immigration status changed',
       'I got divorced',
       'I got married',
       'I started living by myself',
       'I started living with someone else',
       }):
       changes_temp.append('living situation')
-    if 'I received mony from a lawsuit or lottery winnings' in changes:
+    if changes['I received money from a lawsuit or lottery winnings']:
       changes_temp.append('assets')
   change_type = comma_and_list(changes_temp)
 ---
@@ -676,7 +535,9 @@ question: |
 subquestion: |
   You mentioned the following changes: 
   
-  ${changes.true_values()} 
+  % for change in changes.true_values():
+  * ${'I was outside the United States' if change == 'I was outside of the United States for more than 30 days in a row' else change}
+  % endfor
   ${showifdef('other_changes')} 
   
   If you want to add any more information about any of those changes, you can do so below.  
@@ -702,7 +563,7 @@ subquestion: |
   When you are ready, click "continue" to sign your letter and download
   a final copy.
   
-  ${ pdf_concatenate(final_form['preview'], filename="preview_do_not_use.pdf") }
+  [Open your unsigned preview (PDF)](${ ssa_statement.as_pdf(key='preview').url_for() })
 
   Remember to come back to this window to continue and sign your form.
 
@@ -715,7 +576,7 @@ id: signature
 question: |
   Sign your letter
 subquestion: |
-  
+  If you plan to mail or hand-deliver a paper copy, leave the signature blank and choose Continue. Sign page 2 in ink after printing.
 signature: client.signature
 under: |
   ${client}
@@ -724,39 +585,51 @@ required: False
 id: download form
 event: download_form
 question: |
-  Here is your document.
-  [BR]
-  [BR]
-  ${ final_form['final'] }
+  Your statement is ready
 subquestion: |
-  ##__Your form is ready for download below__
-  
-  1. Add your SSN and print out two copies of your letter.
-  1. Keep one copy of the letter for yourself. Send the other copy to Social Security.  
-  % if hasattr(ssa_office, 'phone_number') and ssa_office.phone_number:
-  1. Call your local Social Security office at ${ phone_number_formatted(ssa_office.phone_number) } to find out how to get your letter to them. You can mail, fax, or deliver it in person if your office is open for in-person visits.
-  % else:
-  1. Call Social Security at 1-800-772-1213 to find out how to get your letter to them. You can mail, fax, or deliver it in person if your local office is open for in-person visits.
+  1. Print the statement and add your Social Security number. For paper delivery, sign page 2 in ink.
+  1. Keep a copy for your records.
+  % if (working or working_for_self) and any(job.have_pay_stubs for job in jobs):
+  1. Include copies of the pay stubs you reported having.
   % endif
-  
-attachment code: final_form['final']
+  1. Send the statement and any supporting documents to the Social Security office you selected: **${ ssa_office.address.on_one_line(show_country=False) }**.
+  1. Contact Social Security at 1-800-772-1213 if you need help sending your statement.
+attachment:
+  name: Statement to Social Security
+  filename: Social_Security_statement
+  manual:
+    pdf: ssa_statement.as_pdf()
 ---
 objects:
-  - final_form: DADict
+  - ssa_statement: ALDocument.using(title="Statement to Social Security", filename="Social_Security_statement", enabled=True, has_addendum=True, default_overflow_message=" [Continued on attached page]")
+---
+code: |
+  ssa_statement.overflow_fields['statement_text'].overflow_trigger = 1600
+  ssa_statement.overflow_fields['statement_text'].label = "Statement continued"
+  ssa_statement.overflow_fields.gathered = True
+---
+code: |
+  # Normalize spacing before measuring the PDF field so that repeated line breaks
+  # cannot exhaust the available page height independently of the character limit.
+  statement_text = " ".join(str(summary_of_changes).split())
+---
+attachment:
+  variable name: ssa_statement.addendum
+  docx template file: ssa_statement_continuation.docx
 ---
 id: final attachment
 attachment:
   name: ${client}'s Letter to SSA
-  variable name: final_form[i]
+  variable name: ssa_statement[i]
   filename: ${space_to_underscore(format_date(today()) + client.possessive('letter to SSA'))}
   pdf template file: report_changes_to_ssa.pdf
   fields:
     - "user_name": ${client}
     - "user_representative": ""
     - "user_representative_relationship": ""
-    - "summary_of_changes": ${summary_of_changes}
+    - "summary_of_changes": ${ssa_statement.safe_value('statement_text')}
     - "letter_date": ${letter_date}
-    - "user_signature": ${client.signature}
+    - "user_signature": ${client.signature if i == 'final' else ''}
     - "client_phone_number": ${client.phone_number}
     - "client_address_block": ${client.address.line_one()}
     - "client_address_city_state": ${client.address.city} ${client.address.state}
@@ -765,20 +638,11 @@ attachment:
 template: summary_of_changes
 content: | 
   % for job in employer_jobs:
-  On about ${job.start_date}, I started working at ${job.employer} at ${job.employer_address}. I work approximately ${round(job.normalized_hours(12))} hours every month and get paid 
-  % if job.is_hourly: 
-  ${currency(job.hourly_rate)} per hour 
-  % else: 
-  ${currency(job.amount(period_to_use=12))} 
-  % endif
-  .
-  % if job.have_pay_stubs: 
-  Copies of my pay stubs are attached. 
-  % endif
+  On ${job.start_date}, I started working for ${job.employer}${' at ' + str(job.employer_address) if job.employer_address else ''}. I work about ${round(job.normalized_hours(12))} hours per month and earn ${currency(job.hourly_rate) + ' per hour' if job.is_hourly else currency(job.amount(period_to_use=12)) + ' per month'}.
   % endfor
-  
+
   % for job in self_jobs:
-  In ${job.start_date}, I started working for myself doing ${job.self_employment_type}. I work approximately ${round(job.normalized_hours(12))} hours every month. My business earns about ${currency(job.amount(period_to_use=12))} every month. It costs me ${currency(job.deductions)} monthly in expenses to run my business.
+  On ${job.start_date}, I started working for myself doing ${job.self_employment_type}. I work approximately ${round(job.normalized_hours(12))} hours every month. My business earns about ${currency(job.amount(period_to_use=12))} every month. It costs me ${currency(job.deductions)} monthly in expenses to run my business.
   % endfor
   
   % if benefits_type == 'ssi' and changes.true_values().number() > 0:
@@ -786,6 +650,10 @@ content: |
   % for change in changes.true_values():
   % if change == "I moved":
   • I moved on ${change_details[change].date}. My new address is ${client.address.on_one_line()}
+  % elif change == 'I was outside of the United States for more than 30 days in a row':
+  • I was outside the United States from ${expat_start} to ${expat_end}.
+  % elif change == 'I received an arrest warrant':
+  • I received an arrest warrant on ${change_details[change].date}.
   % elif change == "The number of people in my household changed":
   • My household changed on ${change_details[change].date}. ${change_details['The number of people in my household changed'].reasons.true_values()}.
   % else:

@@ -1,0 +1,31 @@
+---
+# Adapted from MassLegalHelp/docassemble-VLPBranding at cb044b74bd905616c21967404c51f1b1104da501.
+# The two logos come from the same revision. See data/sources/VLPBranding-LICENSE.txt.
+objects:
+  - vlp_logo: DAStaticFile.using(filename="docassemble.ssareportchangesletter:data/static/logo-vlp.png", alt_text="Volunteer Lawyers Project")
+  - lsc_logo: DAStaticFile.using(filename="docassemble.ssareportchangesletter:data/static/lsc_logo.jpg", alt_text="Legal Services Corporation")
+---
+default screen parts:
+  footer: |
+    &copy; ${today().year} [${vlp_logo.show(width="100px")}](https://vlpnet.org/)
+---
+interview help:
+  label: About this tool
+  content: |
+    The [Volunteer Lawyers Project of the Boston Bar Association](https://vlpnet.org/) built this tool with funding from the [Legal Services Corporation](https://www.lsc.gov/).
+
+    ${lsc_logo.show(width="100px")}
+---
+modules:
+  - docassemble.GithubFeedbackForm.github_issue
+---
+default screen parts:
+  under: |
+    % if not user_logged_in():
+    [:sign-in-alt: Sign-in](${url_of('login', next=interview_url())}) or [register](${url_of('register', next=interview_url())}) to save your progress (optional).
+    % endif
+    [:comment-dots: Feedback](${ feedback_link(user_info(), github_repo="docassemble-ssareportchangesletter", github_user="SuffolkLITLab") })
+  pre: |
+    % if get_config('debug'):
+    `id: ${ user_info().question_id }`
+    % endif
