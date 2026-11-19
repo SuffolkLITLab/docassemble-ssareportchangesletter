@@ -576,7 +576,7 @@ id: signature
 question: |
   Sign your letter
 subquestion: |
-  
+  If you plan to mail or hand-deliver a paper copy, leave the signature blank and choose Continue. Sign page 2 in ink after printing.
 signature: client.signature
 under: |
   ${client}
@@ -587,7 +587,7 @@ event: download_form
 question: |
   Your statement is ready
 subquestion: |
-  1. Print the statement. Add your Social Security number and sign it if you left the signature blank.
+  1. Print the statement and add your Social Security number. For paper delivery, sign page 2 in ink.
   1. Keep a copy for your records.
   % if (working or working_for_self) and any(job.have_pay_stubs for job in jobs):
   1. Include copies of the pay stubs you reported having.

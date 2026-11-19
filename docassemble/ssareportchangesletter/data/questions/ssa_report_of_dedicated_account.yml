@@ -389,11 +389,12 @@ edit:
 ---
 reconsider: True
 code: |
-  dedicated_account.calculate()
-  dedicated_account_deposits.calculate()
-  calculated_ledger = True
+  # Keep edit and receipt links attached to each entry when displaying rows by date.
+  dedicated_account.sort_elements(key=lambda entry: entry.date)
+  dedicated_account_deposits.sort_elements(key=lambda entry: entry.date)
+  annual_entries_sorted = True
 ---
-need: calculated_ledger
+need: annual_entries_sorted
 id: review account
 section: dedicated
 field: review_account
